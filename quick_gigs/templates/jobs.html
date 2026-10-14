@@ -1,0 +1,276 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Available Jobs - SkillMatch AI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        .pay-negotiation{background:#f8f9fa;border-radius:12px;padding:1rem;margin:1rem 0}
+        .pay-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem}
+        .pay-amount-display{font-size:1.5rem;font-weight:700;color:var(--primary)}
+        .pay-type-badge{background:var(--secondary);color:white;padding:.3rem .8rem;border-radius:20px;font-size:.75rem;font-weight:600}
+        .pay-type-badge.fixed{background:#6c757d}
+        .pay-slider-container{margin:1rem 0}
+        .pay-slider{width:100%;height:6px;border-radius:5px;background:#d3d3d3;outline:none;-webkit-appearance:none;appearance:none}
+        .pay-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:20px;height:20px;border-radius:50%;background:var(--primary);cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,.2)}
+        .pay-slider::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--primary);cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,.2);border:none}
+        .pay-range-labels{display:flex;justify-content:space-between;font-size:.85rem;color:#6c757d;margin-top:.5rem}
+        .minimum-deposit{background:#fff3cd;border-left:4px solid #ffc107;padding:.5rem .75rem;margin-top:.75rem;border-radius:4px;font-size:.85rem}
+        .minimum-deposit i{color:#ffc107;margin-right:.5rem}
+        .payment-options{display:flex;gap:.75rem;margin:1rem 0}
+        .payment-option{flex:1;padding:.75rem;border:2px solid #e0e0e0;border-radius:10px;cursor:pointer;transition:all .3s ease;text-align:center}
+        .payment-option:hover{border-color:var(--primary);background:#f0f7ff}
+        .payment-option.selected{border-color:var(--primary);background:var(--primary);color:white}
+        .payment-option i{display:block;font-size:1.5rem;margin-bottom:.5rem}
+        .payment-option .option-title{font-weight:600;font-size:.9rem;margin-bottom:.25rem}
+        .payment-option .option-desc{font-size:.75rem;opacity:.8}
+        .apply-section{margin-top:1rem}
+        .negotiation-note{background:#e8f5e9;border-left:4px solid #4caf50;padding:.5rem .75rem;margin-top:.75rem;border-radius:4px;font-size:.85rem;color:#2e7d32}
+        .negotiation-note i{margin-right:.5rem}
+        .applied-badge{margin-top:12px;display:inline-block;padding:8px 12px;border-radius:999px;background:#e8fff0;color:#0b6b2e;font-weight:700;font-size:.9rem}
+        .disabled-card{opacity:.7}
+    </style>
+    <link rel="stylesheet" href="{% static 'css/modern-ui.css' %}">
+</head>
+<body>
+<div class="animated-bg">
+    <div class="floating-shape"></div>
+    <div class="floating-shape"></div>
+    <div class="floating-shape"></div>
+</div>
+
+<div class="texture-overlay"></div>
+<div class="mouse-follower"></div>
+
+<header>
+    <a href="{% url 'home' %}" class="logo">
+        <div class="logo-icon"><i class="fas fa-shopping-cart"></i></div>
+        <div>SkillMatch AI</div>
+    </a>
+
+    <div class="page-nav">
+        <a href="{% url 'home' %}" class="nav-btn"><i class="fas fa-home"></i> Home</a>
+        <a href="{% url 'jobs' %}" class="nav-btn active"><i class="fas fa-briefcase"></i> Jobs</a>
+        <a href="{% url 'job_matches' %}" class="nav-btn"><i class="fas fa-chart-line"></i> Job Matches</a>
+        <a href="{% url 'resume_builder' %}" class="nav-btn"><i class="fas fa-file-alt"></i> Resume</a>
+        <a href="{% url 'inbox' %}" class="nav-btn"><i class="fas fa-inbox"></i> Inbox</a>
+        <a href="{% url 'post_job' %}" class="nav-btn"><i class="fas fa-plus-circle"></i> Post Job</a>
+        <a href="{% url 'about' %}" class="nav-btn"><i class="fas fa-info-circle"></i> About Us</a>
+    </div>
+
+    <div class="user-actions">
+        {% if user.is_authenticated %}
+            <a href="{% url 'profile' %}" class="user-profile">
+                <div class="user-avatar">{{ user.first_name|default:user.username|slice:":1"|upper }}</div>
+                <div class="user-name">{{ user.first_name|default:user.username }}</div>
+                <i class="fas fa-chevron-down"></i>
+            </a>
+        {% else %}
+            <div class="auth-buttons">
+                <a href="{% url 'login' %}" class="auth-btn login-btn"><i class="fas fa-sign-in-alt"></i> Login</a>
+                <a href="{% url 'signup' %}" class="auth-btn signup-btn"><i class="fas fa-user-plus"></i> Sign Up</a>
+            </div>
+        {% endif %}
+    </div>
+</header>
+
+<main class="main-content">
+    <h1 class="section-title"><i class="fas fa-briefcase"></i> Available Gigs</h1>
+
+    {% if messages %}
+    <div style="margin: 0 0 1.25rem 0;">
+        {% for message in messages %}
+        <div style="padding: 10px; border-radius: 10px; background: #e8fff0; color: #0b6b2e; margin-bottom:8px;">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="jobs-grid">
+        {% if gigs %}
+            {% for gig in gigs %}
+            {% with raw=gig.pay|stringformat:"s" %}
+            {% with paynum=raw|cut:"₹"|cut:"/day"|cut:"/Day"|cut:"/DAY"|cut:"day"|cut:"Day"|cut:"DAY"|cut:" "|cut:"," %}
+            <div class="job-card {% if user.is_authenticated and gig.employer_id == user.id %}disabled-card{% endif %}">
+
+                {% if gig.status|lower == "urgent" %}
+                <div style="position:absolute;top:15px;right:15px;background:var(--secondary);color:#fff;padding:.3rem .8rem;border-radius:20px;font-size:.8rem;font-weight:600;">
+                    <i class="fas fa-bolt"></i> URGENT
+                </div>
+                {% endif %}
+
+                <h3 class="job-title"><a href="{% url 'job_detail' gig.id %}">{{ gig.title }}</a></h3>
+             <div class="job-employer" style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+  <a href="{% url 'employer_profile' gig.employer_id %}" style="text-decoration:none; color:inherit; font-weight:700;">
+    {{ gig.employer_display_name }}
+  </a>
+
+  <div style="display:flex; align-items:center; gap:8px; font-weight:700;">
+    <span style="color:#f5b301;">
+      <i class="fas fa-star"></i> {{ gig.employer_avg_rating|floatformat:1 }}
+    </span>
+    <span style="color: var(--gray); font-weight:600;">
+      ({{ gig.employer_rating_count }} review{{ gig.employer_rating_count|pluralize }})
+    </span>
+  </div>
+</div>
+
+
+                <p class="job-description">{{ gig.description }}</p>
+
+                <div class="job-details">
+                    <div class="detail"><i class="fas fa-map-marker-alt"></i><span>{{ gig.location }}</span></div>
+                    <div class="detail"><i class="fas fa-calendar-alt"></i><span>{{ gig.duration|default:"Flexible" }}</span></div>
+                    {% if gig.job_type %}<div class="detail"><i class="fas fa-briefcase"></i><span>{{ gig.get_job_type_display }}</span></div>{% endif %}
+                    <div class="detail"><i class="fas fa-users"></i><span>{{ gig.workers_needed }} workers needed</span></div>
+                    <div class="detail"><i class="fas fa-tools"></i><span>{{ gig.skills|default:"No skills required" }}</span></div>
+                </div>
+
+                <div class="pay-negotiation">
+                    <div class="pay-header">
+                        <div class="pay-amount-display" id="payDisplay-{{ gig.id }}">₹{{ paynum|default:"200" }}</div>
+                        <div class="pay-type-badge"><i class="fas fa-handshake"></i> Negotiable</div>
+                    </div>
+
+                    <div class="pay-slider-container">
+                        <input type="range"
+                               class="pay-slider"
+                               id="paySlider-{{ gig.id }}"
+                               min="100" max="10000" step="50"
+                               value="{{ paynum|default:'200' }}"
+                               data-gig-id="{{ gig.id }}">
+                        <div class="pay-range-labels">
+                            <span>Min: ₹100</span><span>Max: ₹10000</span>
+                        </div>
+                    </div>
+
+                    <div class="payment-options">
+                        <div class="payment-option selected" data-option="full" data-gig-id="{{ gig.id }}">
+                            <i class="fas fa-wallet"></i>
+                            <div class="option-title">Pay Now</div>
+                            <div class="option-desc">Full payment upfront</div>
+                        </div>
+                        
+                    </div>
+                </div>
+
+                <div class="apply-section">
+                    {% if not user.is_authenticated %}
+                        <a class="btn btn-primary" href="{% url 'login' %}">
+                            <i class="fas fa-paper-plane"></i> Login to Apply
+                        </a>
+
+                    {% elif gig.employer_id == user.id %}
+                        <div class="applied-badge">👤 This is your job post</div>
+
+                    {% elif applied_gig_ids and gig.id in applied_gig_ids %}
+                        <div class="applied-badge">✅ Applied</div>
+
+                    {% else %}
+                        <form method="POST" action="{% url 'apply_to_gig' gig.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="proposed_pay" id="proposedPay-{{ gig.id }}" value="{{ paynum|default:'200' }}">
+                            <input type="hidden" name="payment_method" id="paymentMethod-{{ gig.id }}" value="full">
+
+                            <!-- IMPORTANT: no apply-btn class here -->
+                            <button class="btn btn-primary" type="submit" style="width:100%;">
+                                <i class="fas fa-paper-plane"></i> Apply with Proposed Budget
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+
+            </div>
+            {% endwith %}
+            {% endwith %}
+            {% endfor %}
+        {% else %}
+            <div style="background:#fff;padding:2rem;border-radius:16px;text-align:center;box-shadow:var(--shadow);">
+                <h3 style="margin-bottom:.5rem;">No gigs posted yet</h3>
+                <p style="color:var(--gray);margin-bottom:1.25rem;">Be the first to post a job opportunity.</p>
+                <a href="{% url 'post_job' %}" class="btn btn-primary"><i class="fas fa-plus-circle"></i> Post Job</a>
+            </div>
+        {% endif %}
+    </div>
+</main>
+
+<!-- Footer -->
+    <footer>
+      <div class="footer-content">
+        <div class="footer-about">
+          <div class="footer-logo">
+            <div style="background: var(--primary); width: 40px; height: 40px; border-radius: 10px; display:flex; align-items:center; justify-content:center; color:white;">
+              <i class="fas fa-shopping-cart"></i>
+            </div>
+            <div>SkillMatch AI</div>
+          </div>
+          <p class="footer-description">
+            Empowering local communities through accessible employment opportunities. Find work or hire help with just a few clicks.
+          </p>
+        </div>
+
+        <div class="footer-links">
+          <h3>Quick Links</h3>
+          <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/jobs/">Browse Jobs</a></li>
+            <li><a href="/post-job/">Post a Job</a></li>
+            <li><a href="/about/">About Us</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-links">
+          <h3>Support</h3>
+          <ul>
+            <li><a href="/help/">Help Center</a></li>
+            <li><a href="/safety/">Safety Guidelines</a></li>
+            <li><a href="/contact/">Contact Support</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="copyright">
+        <p>© <span id="currentYear">2026</span> SkillMatch AI. Connecting workers with opportunities.</p>
+      </div>
+    </footer>
+
+<script src="{% static 'js/main.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // slider -> update text + hidden proposed_pay
+    document.querySelectorAll('.pay-slider').forEach(slider => {
+        const gigId = slider.dataset.gigId;
+        const payDisplay = document.getElementById(`payDisplay-${gigId}`);
+        const proposedPayInput = document.getElementById(`proposedPay-${gigId}`);
+
+        slider.addEventListener('input', function() {
+            const value = this.value;
+            if (payDisplay) payDisplay.textContent = `₹${value}`;
+            if (proposedPayInput) proposedPayInput.value = value;
+        });
+    });
+
+    // option -> update hidden payment_method
+    document.querySelectorAll('.payment-option').forEach(option => {
+        option.addEventListener('click', function() {
+            const gigId = this.dataset.gigId;
+            const paymentType = this.dataset.option;
+
+            document.querySelectorAll(`.payment-option[data-gig-id="${gigId}"]`).forEach(opt => {
+                opt.classList.remove('selected');
+            });
+
+            this.classList.add('selected');
+
+            const paymentMethodInput = document.getElementById(`paymentMethod-${gigId}`);
+            if (paymentMethodInput) paymentMethodInput.value = paymentType;
+        });
+    });
+});
+</script>
+</body>
+</html>

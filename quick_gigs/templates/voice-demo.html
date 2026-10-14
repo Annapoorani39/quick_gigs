@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Experience and Skills | SkillMatch AI{% endblock %}
+{% block content %}
+<main class="voice-demo">
+    <section class="voice-panel">
+        <p class="eyebrow">Voice-first experience capture</p>
+        <h1>Tell us about your experience</h1>
+        <p class="lead">Speak or type in English or Tamil. Review the transcript and detected skills before saving them to your profile.</p>
+        {% csrf_token %}
+        <div class="voice-controls">
+            <label for="voice-language">Voice language</label>
+            <select class="form-control" id="voice-language">
+                <option value="en-IN">English</option>
+                <option value="ta-IN">Tamil</option>
+            </select>
+            <button id="start-recording" class="btn btn-primary" type="button" data-voice-target="speech-output">🎤 Start recording</button>
+            <button id="stop-recording" class="btn btn-secondary" type="button" data-voice-stop>Stop</button>
+        </div>
+        <div class="status-line" id="voice-status" role="status" aria-live="polite">Speech recognition availability depends on your browser. You can type or edit the text at any time.</div>
+        <label for="speech-output">Experience transcript</label>
+        <textarea class="form-control" id="speech-output" rows="7" maxlength="10000"></textarea>
+        <div class="button-stack">
+            <button class="btn btn-primary" id="analyze-speech" type="button">Extract skills</button>
+            <button class="btn btn-secondary" id="save-extracted-skills" type="button" {% if not user.is_authenticated %}disabled{% endif %}>Save reviewed skills to profile</button>
+        </div>
+        {% if not user.is_authenticated %}
+        <p><a href="{% url 'login' %}">Sign in</a> to save the reviewed skills to your profile.</p>
+        {% endif %}
+        <p id="analysis-status" role="status" aria-live="polite"></p>
+        <label for="extracted-skills">Detected skills — edit before saving</label>
+        <textarea class="form-control" id="extracted-skills" rows="3" maxlength="5000"></textarea>
+        <div class="button-stack">
+            <a class="btn btn-secondary" href="{% url 'resume_builder' %}">Continue to resume builder</a>
+            <a class="btn btn-secondary" href="{% url 'job_matches' %}">Explore published job matches</a>
+        </div>
+    </section>
+</main>
+<style>
+    .voice-demo { display: grid; place-items: center; }
+    .voice-panel { background: white; padding: 2rem; border-radius: 20px; width: min(860px, 100%); box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08); }
+    .voice-panel textarea { width: 100%; border-radius: 12px; padding: 1rem; font-size: 1rem; }
+    .voice-controls, .button-stack { display: flex; gap: .75rem; flex-wrap: wrap; align-items: end; margin: 1rem 0; }
+    .status-line { margin: 1rem 0; color: #475569; }
+    .eyebrow { text-transform: uppercase; letter-spacing: .12em; color: #166534; font-weight: 700; font-size: .8rem; }
+    @media (max-width: 600px) { .voice-panel { padding: 1.2rem; } }
+</style>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/skillmatch.js' %}" defer></script>
+{% endblock %}

@@ -1,0 +1,241 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}SkillMatch AI{% endblock %}</title>
+
+    <!-- Fonts + Icons + Base CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Poppins:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <!-- Scoped theme overrides for a cleaner modern look -->
+    <style>
+        :root{
+            --primary:#2ea44f; /* green */
+            --muted:#f6f8f7;
+            --card:#ffffffcc;
+            --text:#223;
+            --shadow: 0 6px 22px rgba(34,34,34,0.06);
+            --glass: rgba(255,255,255,0.55);
+            --max-width:1100px;
+        }
+        html,body{height:100%;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; color:var(--text);}
+        body{margin:0;background:linear-gradient(180deg,#f3fbf6 0%, #fbfbfd 60%);-webkit-font-smoothing:antialiased;}
+
+        /* animated background shapes (subtle) */
+        .animated-bg{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+        .animated-bg .floating-shape{position:absolute;border-radius:50%;filter:blur(36px);opacity:.18}
+        .animated-bg .floating-shape:nth-child(1){width:480px;height:480px;background:radial-gradient(circle at 20% 30%, #dff7eb, transparent 40%);left:-120px;top:-60px}
+        .animated-bg .floating-shape:nth-child(2){width:360px;height:360px;background:radial-gradient(circle at 70% 40%, #fff1e6, transparent 40%);right:-80px;top:40%}
+        .animated-bg .floating-shape:nth-child(3){width:260px;height:260px;background:radial-gradient(circle at 30% 20%, #e8f5ff, transparent 40%);left:10%;bottom:-80px}
+
+        /* header */
+        header{position:sticky;top:0;z-index:40;backdrop-filter:blur(6px);background:linear-gradient(180deg, rgba(255,255,255,0.75), rgba(255,255,255,0.6));box-shadow:0 2px 10px rgba(12,12,12,0.04);display:flex;align-items:center;justify-content:space-between;padding:12px 24px;}
+        header .logo{display:flex;gap:12px;align-items:center;text-decoration:none;color:var(--text);font-weight:700}
+        header .logo-icon{background:var(--primary);color:#fff;width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow)}
+        .nav-menu{display:flex;gap:14px;align-items:center}
+        .nav-link{padding:8px 12px;border-radius:10px;color:rgba(34,34,34,0.8);text-decoration:none;font-weight:500}
+        .nav-link:hover{background:var(--muted)}
+
+        .user-actions{display:flex;align-items:center;gap:10px}
+        .user-profile{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text)}
+        .user-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#fff,#f2f2f2);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--primary);box-shadow:0 4px 10px rgba(0,0,0,0.06)}
+        .auth-btn{padding:8px 12px;border-radius:8px;text-decoration:none;font-weight:600}
+        .login-btn{color:var(--primary);border:1px solid rgba(46,164,79,0.12);background:transparent}
+        .signup-btn{background:var(--primary);color:#fff}
+
+        /* main content container */
+        .main-content{position:relative;z-index:10;width:min(var(--max-width), calc(100% - 32px));max-width:var(--max-width);margin:40px auto;padding:28px;background:var(--card);border-radius:14px;box-shadow:var(--shadow)}
+
+        /* alerts */
+        .alert{border-left:4px solid var(--primary)}
+
+        /* form-card / dialog styles to match target design */
+        .form-card{background:#fff;border-radius:14px;padding:28px 30px;box-shadow:0 10px 30px rgba(34,34,34,0.06);max-width:760px;margin:28px auto}
+        .form-card .card-header{text-align:center;margin-bottom:18px}
+        .form-card .card-title{font-family:Poppins, Inter, sans-serif;font-size:22px;color:#114b2b;margin:0 0 6px}
+        .form-card .card-subtitle{color:rgba(34,34,34,0.65);margin:0;font-size:13px}
+
+        .form-group{margin:12px 0}
+        .form-group label{display:block;margin-bottom:8px;font-weight:600;color:rgba(34,34,34,0.8)}
+        .form-control{width:100%;padding:11px 14px;border-radius:10px;border:1px solid #e7ece7;background:#fff;box-shadow:none;font-size:14px}
+        textarea.form-control{min-height:100px;resize:vertical}
+        .form-check{display:flex;align-items:center;margin:10px 0}
+        .form-check-input{margin-right:10px;margin-top:0;cursor:pointer}
+        .form-check-label{margin-bottom:0;display:flex;align-items:center;font-weight:400;color:rgba(34,34,34,0.8);cursor:pointer}
+
+        .form-actions{display:flex;gap:12px;align-items:center;margin-top:18px}
+        .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:24px;border:none;cursor:pointer;font-weight:700}
+        .btn-primary{background:var(--primary);color:#fff}
+        .btn-secondary{background:#ff9a1f;color:#fff}
+
+        /* small helpers */
+        .muted{color:rgba(34,34,34,0.6);font-size:13px}
+
+        /* footer */
+        footer{margin-top:48px;padding:40px 20px;background:transparent}
+        .footer-content{display:flex;gap:40px;max-width:var(--max-width);margin:0 auto 18px;justify-content:space-between;align-items:flex-start}
+        .footer-about{max-width:360px}
+        .footer-logo{display:flex;gap:12px;align-items:center;font-weight:700}
+        .footer-description{color:rgba(34,34,34,0.7);margin-top:10px}
+        .footer-links h3{margin-top:0}
+        .footer-links ul{list-style:none;padding:0;margin:0}
+        .footer-links li{margin:8px 0}
+        .footer-links a{text-decoration:none;color:rgba(34,34,34,0.75)}
+        .copyright{text-align:center;color:rgba(34,34,34,0.5)}
+
+        @media (max-width:900px){
+            .footer-content{flex-direction:column;gap:18px}
+            .nav-menu{display:none}
+            header{padding:12px}
+            .main-content{margin:20px 16px;padding:20px}
+        }
+    </style>
+    <link rel="stylesheet" href="{% static 'css/modern-ui.css' %}">
+
+    {% block extra_head %}{% endblock %}
+</head>
+<body data-can-save-progress="{% if user.is_authenticated %}true{% else %}false{% endif %}">
+
+<!-- Animated Background -->
+<div class="animated-bg" aria-hidden="true">
+    <div class="floating-shape"></div>
+    <div class="floating-shape"></div>
+    <div class="floating-shape"></div>
+</div>
+
+<div class="mouse-follower" aria-hidden="true"></div>
+
+<!-- ================= HEADER ================= -->
+<header>
+    <a href="/" class="logo">
+        <div class="logo-icon">
+            <i class="fas fa-shopping-cart"></i>
+        </div>
+        <div>SkillMatch AI</div>
+    </a>
+
+    <nav class="nav-menu" id="main-navigation" role="navigation" aria-label="Main">
+        <a href="/" class="nav-link{% if request.path == '/' %} active{% endif %}"{% if request.path == '/' %} aria-current="page"{% endif %}><i class="fas fa-home"></i> Home</a>
+        <a href="/dashboard/" class="nav-link{% if request.path == '/dashboard/' %} active{% endif %}"{% if request.path == '/dashboard/' %} aria-current="page"{% endif %}><i class="fas fa-brain"></i> SkillMatch</a>
+        <a href="/job-matches/" class="nav-link{% if request.path == '/job-matches/' %} active{% endif %}"{% if request.path == '/job-matches/' %} aria-current="page"{% endif %}><i class="fas fa-chart-line"></i> Job Matches</a>
+        <a href="/sdg1-opportunities/" class="nav-link{% if request.path == '/sdg1-opportunities/' %} active{% endif %}"{% if request.path == '/sdg1-opportunities/' %} aria-current="page"{% endif %}><i class="fas fa-hand-holding-heart"></i> SDG 1</a>
+        <a href="/sdg1-impact/" class="nav-link{% if request.path == '/sdg1-impact/' %} active{% endif %}"{% if request.path == '/sdg1-impact/' %} aria-current="page"{% endif %}><i class="fas fa-chart-pie"></i> Workforce</a>
+        <a href="/jobs/" class="nav-link{% if request.path == '/jobs/' %} active{% endif %}"{% if request.path == '/jobs/' %} aria-current="page"{% endif %}><i class="fas fa-briefcase"></i> Jobs</a>
+        <a href="/resume-builder/" class="nav-link{% if request.path == '/resume-builder/' %} active{% endif %}"{% if request.path == '/resume-builder/' %} aria-current="page"{% endif %}><i class="fas fa-file-alt"></i> Resume</a>
+
+        {% if user.is_authenticated %}
+            <a href="/inbox/" class="nav-link"><i class="fas fa-inbox"></i> Inbox</a>
+            <a href="/post-job/" class="nav-link"><i class="fas fa-plus-circle"></i> Post Job</a>
+        {% endif %}
+
+        <a href="/about/" class="nav-link"><i class="fas fa-info-circle"></i> About</a>
+    </nav>
+
+    <button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="main-navigation">
+        <i class="fas fa-bars" aria-hidden="true"></i>
+    </button>
+
+    <div class="user-actions">
+        {% if user.is_authenticated %}
+            <a href="/profile/" class="user-profile">
+                <div class="user-avatar">
+                    {{ user.first_name|default:user.username|slice:":1"|upper }}
+                </div>
+                <div class="user-name">
+                    {{ user.first_name|default:user.username }}
+                </div>
+                <i class="fas fa-chevron-down"></i>
+            </a>
+        {% else %}
+            <div class="auth-buttons">
+                <a href="/login/" class="auth-btn login-btn">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </a>
+                <a href="/signup/" class="auth-btn signup-btn">
+                    <i class="fas fa-user-plus"></i> Sign Up
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</header>
+
+<!-- ================= FLASH MESSAGES ================= -->
+{% if messages %}
+<div style="max-width: var(--max-width); margin: 1rem auto;">
+    {% for message in messages %}
+        <div class="alert {{ message.tags }}"
+             style="padding:1rem;border-radius:12px;margin-bottom:.5rem;background:var(--card);box-shadow:var(--shadow);">
+            {{ message }}
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- ================= PAGE CONTENT ================= -->
+<main class="main-content">
+    {% block content %}{% endblock %}
+</main>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+    <div class="footer-content">
+        <div class="footer-about">
+            <div class="footer-logo">
+                <div style="background:var(--primary);width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <div>SkillMatch AI</div>
+            </div>
+            <p class="footer-description">
+                Connecting local workers with opportunities. Simple, fast, reliable.
+            </p>
+        </div>
+
+        <div class="footer-links">
+            <h3>Quick Links</h3>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/jobs/">Jobs</a></li>
+                <li><a href="/sdg1-opportunities/">SDG 1</a></li>
+                <li><a href="/post-job/">Post Job</a></li>
+                <li><a href="/about/">About</a></li>
+            </ul>
+        </div>
+
+        <div class="footer-links">
+            <h3>Support</h3>
+            <ul>
+                <li><a href="/help/">Help Center</a></li>
+                <li><a href="/safety/">Safety</a></li>
+                <li><a href="/contact/">Contact</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="copyright">
+        <p>© 2026 SkillMatch AI. All rights reserved.</p>
+    </div>
+</footer>
+
+<script src="{% static 'js/main.js' %}"></script>
+<script>
+    const navigationToggle = document.querySelector(".nav-toggle");
+    const mainNavigation = document.getElementById("main-navigation");
+    if (navigationToggle && mainNavigation) {
+        navigationToggle.addEventListener("click", () => {
+            const isExpanded = navigationToggle.getAttribute("aria-expanded") === "true";
+            navigationToggle.setAttribute("aria-expanded", String(!isExpanded));
+            navigationToggle.setAttribute("aria-label", isExpanded ? "Open navigation" : "Close navigation");
+            mainNavigation.classList.toggle("is-open", !isExpanded);
+        });
+    }
+</script>
+{% block extra_js %}{% endblock %}
+
+</body>
+</html>

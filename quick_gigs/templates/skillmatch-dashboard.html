@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}SkillMatch AI Dashboard{% endblock %}
+{% block content %}
+<div class="skillmatch-shell">
+    <section class="hero-section">
+        <div>
+            <p class="eyebrow">SkillMatch AI</p>
+            <h1>Turn your real work experience into job opportunities.</h1>
+            <p class="lead">Review the skills you have, compare them with published jobs, and see which skills you may want to develop.</p>
+            <div class="cta-row">
+                <a class="btn btn-primary" href="{% url 'voice_demo' %}">🎤 Tell us about your experience</a>
+                <a class="btn btn-secondary" href="{% url 'resume_builder' %}">📝 Build Resume</a>
+                <a class="btn btn-secondary" href="{% url 'job_matches' %}">View job matches</a>
+            </div>
+        </div>
+        <div class="mini-panel">
+            <h3>Your saved skills</h3>
+            {% if profile_ready %}
+            <ul>{% for skill in user_skills %}<li>{{ skill|title }}</li>{% endfor %}</ul>
+            {% else %}
+            <p>No saved skills yet. Add and save skills in <a href="{% url 'profile' %}">your profile</a>, or edit them on the job matching page.</p>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="card-panel learning-panel">
+        <p class="eyebrow">Personalized learning path</p>
+        <h2>Skill Stimulator</h2>
+        {% if not profile_ready %}
+        <p>No saved profile skills yet. Add skills to your <a href="{% url 'profile' %}">profile</a> or <a href="{% url 'resume_builder' %}">upload a resume and review extracted skills</a> to see what you already know.</p>
+        {% endif %}
+        {% if jobs %}
+        <label for="stimulator-job">Choose a target job</label>
+        <select class="form-control" id="stimulator-job">
+            <option value="">Select a published job</option>
+            {% for item in jobs %}
+            <option value="{{ item.gig.id }}" {% if selected_job and selected_job.gig.id == item.gig.id %}selected{% endif %}>{{ item.gig.title }} · {{ item.gig.location }}</option>
+            {% endfor %}
+        </select>
+        {% if selected_job %}
+        <article class="stimulator-job" data-stimulator-job data-required="{{ selected_job.required_skills|join:'||' }}" data-job-id="{{ selected_job.gig.id }}">
+            <h3>{{ selected_job.gig.title }}</h3>
+            <p>{{ selected_job.gig.description }}</p>
+            <p class="muted">{{ selected_job.gig.location }} · {{ selected_job.gig.employer_name }}{% if selected_job.gig.job_type %} · {{ selected_job.gig.get_job_type_display }}{% endif %}</p>
+            {% if selected_job.required_skills %}
+            <p>Learning order follows the order of the employer-listed required skills.</p>
+            <div class="learning-columns">
+                <div><h4>Skills you have</h4><ul id="stimulator-mastered">{% for skill in selected_job.matched_skills %}<li>{{ skill }}</li>{% empty %}<li>No listed required skills match your saved profile yet.</li>{% endfor %}</ul></div>
+                <div><h4>Skills to develop</h4><ol id="stimulator-missing">{% for skill in selected_job.missing_skills %}<li data-skill-key="{{ skill|lower }}">{{ skill }}{% if skill|lower in completed_skill_keys %}<span class="progress-done"> · Completed</span>{% endif %}</li>{% empty %}<li>No gaps in this job’s listed skill requirements.</li>{% endfor %}</ol></div>
+            </div>
+            <p class="muted">Learning progress tracks skill completion in your account; the app does not currently have a course or lesson catalogue.</p>
+            <progress id="stimulator-overall-progress" max="{{ selected_skill_progress.total|default:1 }}" value="{{ selected_skill_progress.completed }}"></progress>
+            <p id="stimulator-progress-label">{{ selected_skill_progress.completed }} of {{ selected_skill_progress.total }} missing skills marked complete.</p>
+            <ul class="resource-list">{% for resource in selected_job.resources %}<li><strong>{{ resource.skill }}:</strong> {% for link in resource.links %}<a href="{{ link }}" target="_blank" rel="noopener noreferrer">{% if forloop.first %}Start learning{% else %}Continue learning{% endif %}</a>{% if not forloop.last %} · {% endif %}{% endfor %}</li>{% endfor %}</ul>
+            <div id="stimulator-progress-controls">
+                {% for skill in selected_job.missing_skills %}
+                <label class="progress-control"><input type="checkbox" data-progress-skill="{{ skill }}" {% if skill|lower in completed_skill_keys %}checked{% endif %} {% if not user.is_authenticated %}disabled{% endif %}> Mark {{ skill }} as completed</label>
+                {% endfor %}
+                {% if not user.is_authenticated %}<p><a href="{% url 'login' %}?next={% url 'skill_dashboard' %}?job_id={{ selected_job.gig.id }}">Sign in to save learning progress.</a></p>{% endif %}
+            </div>
+            <p id="stimulator-status" role="status" aria-live="polite"></p>
+            {% else %}
+            <p>This job has no listed skill requirements, so a learning gap or match percentage cannot be calculated. <a href="{% url 'job_detail' selected_job.gig.id %}">View job details</a> or choose another job.</p>
+            {% endif %}
+            <a class="btn btn-secondary" href="{% url 'job_detail' selected_job.gig.id %}">View job details</a>
+        </article>
+        {% else %}
+        <p>Select a published job to compare your saved skills with its listed requirements. If no jobs appear, check back after an employer publishes one.</p>
+        {% endif %}
+        {{ completed_skill_keys|json_script:"stimulator-completed-skills" }}
+    </section>
+    {% endif %}
+
+    <section class="card-panel">
+        <h2>Available published jobs</h2>
+        <p>Match formula: matched listed job skills ÷ total listed job skills × 100. Jobs without listed requirements are not given a percentage.</p>
+        <div class="job-list">
+            {% for item in jobs %}
+            <article class="job-row">
+                <div>
+                    <h3><a href="{% url 'job_detail' item.gig.id %}">{{ item.gig.title }}</a></h3>
+                    <p>{{ item.gig.description }}</p>
+                    <small>{{ item.gig.location }} · {{ item.gig.employer_name }}</small>
+                    <p><strong>Skills you have:</strong> {{ item.matched_skills|join:", "|default:"None matched yet" }}</p>
+                    <p><strong>Skills to develop:</strong> {{ item.missing_skills|join:", "|default:"No listed gaps" }}</p>
+                    <a class="btn btn-secondary" href="{% url 'skill_dashboard' %}?job_id={{ item.gig.id }}">Learn missing skills</a>
+                </div>
+                <div class="job-score">
+                    {% if item.match_score != None %}<strong>{{ item.match_score }}%</strong><span>Calculated match</span>
+                    {% else %}<strong>—</strong><span>No requirements listed</span>{% endif %}
+                </div>
+            </article>
+            {% empty %}
+            <p class="empty-state-copy">No open published jobs are available right now. No sample jobs or estimated match scores are shown.</p>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+
+<style>
+    .skillmatch-shell { display: grid; gap: 1.5rem; }
+    .hero-section { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; align-items: center; }
+    .eyebrow { text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.75rem; color: #166534; font-weight: 700; }
+    .hero-section h1 { font-size: clamp(2.2rem, 4vw, 3.4rem); margin: 0.25rem 0 0.75rem; }
+    .lead { max-width: 60ch; color: #384150; }
+    .cta-row { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1.25rem; }
+    .mini-panel, .card-panel { background: white; border-radius: 18px; box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06); border: 1px solid rgba(15, 23, 42, 0.04); padding: 1.2rem; }
+    .mini-panel ul { margin: 1rem 0 0; padding-left: 1.2rem; color: #1f2937; }
+    .job-list { display: grid; gap: 1rem; margin-top: 1rem; }
+    .learning-panel > select { max-width: 36rem; margin: .5rem 0 1rem; }
+    .stimulator-job { margin-top:1rem; padding:1rem; background:#f8fafc; border-radius:14px; }
+    .learning-columns { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; }
+    .progress-control { display:block; margin:.5rem 0; }
+    .progress-done { color:#166534; font-weight:600; }
+    .resource-list { line-height:1.9; }
+    .job-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1rem; }
+    .job-score { text-align: center; padding: 0.75rem 1rem; background: #ecfdf5; border-radius: 12px; }
+    .job-score strong, .job-score span { display: block; }
+    .job-score strong { font-size: 1.4rem; color: #166534; }
+    .empty-state-copy { color: #475569; }
+    @media (max-width: 800px) { .hero-section { grid-template-columns: 1fr; } .job-row { flex-direction: column; align-items: flex-start; } .learning-columns {grid-template-columns:1fr;} }
+</style>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/skillmatch.js' %}" defer></script>
+{% endblock %}

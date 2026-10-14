@@ -1,0 +1,308 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inbox - SkillMatch AI</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <link rel="stylesheet" href="{% static 'css/modern-ui.css' %}">
+</head>
+<body>
+
+<div class="animated-bg">
+  <div class="floating-shape"></div>
+  <div class="floating-shape"></div>
+  <div class="floating-shape"></div>
+</div>
+
+<div class="mouse-follower"></div>
+
+<div class="page-container">
+
+<header>
+  <a href="{% url 'home' %}" class="logo">
+    <div class="logo-icon"><i class="fas fa-shopping-cart"></i></div>
+    <div>SkillMatch AI</div>
+  </a>
+
+  <nav class="nav-menu">
+    <a href="{% url 'home' %}" class="nav-link"><i class="fas fa-home"></i> Home</a>
+    <a href="{% url 'jobs' %}" class="nav-link"><i class="fas fa-briefcase"></i> Jobs</a>
+    <a href="{% url 'inbox' %}" class="nav-link active"><i class="fas fa-inbox"></i> Inbox</a>
+    <a href="{% url 'post_job' %}" class="nav-link"><i class="fas fa-plus-circle"></i> Post Job</a>
+    <a href="{% url 'about' %}" class="nav-link"><i class="fas fa-info-circle"></i> About</a>
+  </nav>
+
+  <div class="user-actions">
+    <a href="{% url 'profile' %}" class="user-profile">
+      <div class="user-avatar">{{ user.first_name|default:user.username|slice:":1"|upper }}</div>
+      <div class="user-name">{{ user.first_name|default:user.username }}</div>
+      <i class="fas fa-chevron-down"></i>
+    </a>
+  </div>
+</header>
+
+<main class="inbox-main-content">
+  <div class="inbox-container">
+
+    <div class="inbox-header">
+      <h1><i class="fas fa-inbox"></i> Your Inbox</h1>
+      <p>Applications you sent & received</p>
+    </div>
+
+    {% if messages %}
+      <div style="margin: 0 0 1rem 0;">
+        {% for message in messages %}
+          <div style="padding:10px;border-radius:10px;background:#e8fff0;color:#0b6b2e;margin-bottom:8px;">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="content-container">
+
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="sidebar-tabs">
+          <button class="sidebar-tab active" data-target="#tab-worker">
+            My Applications ({{ worker_apps|length|default:0 }})
+          </button>
+          <button class="sidebar-tab" data-target="#tab-employer">
+            Applications Received ({{ employer_apps|length|default:0 }})
+          </button>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="main-content">
+
+        <!-- ================= Worker view ================= -->
+        <div id="tab-worker" class="tab-panel" style="display:block;">
+          <h2><i class="fas fa-paper-plane"></i> My Applications</h2>
+          <br>
+
+          {% if worker_apps %}
+            {% for app in worker_apps %}
+              <div class="job-card" style="margin-bottom:1rem;">
+                <h3 class="job-title">{{ app.gig.title }}</h3>
+
+                <div class="job-details">
+                  <div class="detail">
+                    <i class="fas fa-map-marker-alt"></i>
+                    {{ app.gig.location|default:"-" }}
+                  </div>
+                  <div class="detail">
+                    <i class="fas fa-user-tie"></i>
+                    Employer:
+                    <a href="{% url 'employer_profile' app.gig.employer.id %}"
+                       style="color: var(--primary); text-decoration: none; font-weight: 600;">
+                      {{ app.gig.employer.first_name|default:app.gig.employer.username }}
+                    </a>
+                  </div>
+                  <div class="detail">
+                    <i class="fas fa-calendar-alt"></i>
+                    {{ app.applied_at|date:"d M Y, h:i A" }}
+                  </div>
+                </div>
+
+                <div class="pay">{{ app.gig.pay }}</div>
+
+                <div style="margin-top:.5rem;">
+                  Status:
+                  <strong>
+                    {% if app.status == "pending" %}Pending
+                    {% elif app.status == "accepted" %}Accepted ✅
+                    {% elif app.status == "rejected" %}Rejected ❌
+                    {% elif app.status == "completed" %}Completed 🎉
+                    {% else %}{{ app.status }}{% endif %}
+                  </strong>
+                </div>
+
+                <div style="margin-top:.5rem; color: var(--gray);">
+                  Proposed Pay: ₹{{ app.proposed_pay }} • Payment: {{ app.payment_method|capfirst }}
+                </div>
+
+                <!-- ⭐ Worker rates employer AFTER completion -->
+                {% if app.status == "completed" %}
+                  <div style="margin-top:1rem;">
+                    {% if not app.worker_rated_employer %}
+                      <a href="{% url 'rate_employer' app.id %}" class="btn btn-primary" style="width:100%; text-align:center;">
+                        ⭐ Rate Employer
+                      </a>
+                    {% else %}
+                      <div style="padding:10px;border-radius:10px;background:#f0f7ff;color:#0b3a6b;font-weight:700;text-align:center;">
+                        ✅ You have already rated this employer
+                      </div>
+                    {% endif %}
+                  </div>
+                {% endif %}
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="job-card" style="text-align:center;">
+              <p>No applications yet.</p>
+              <a href="{% url 'jobs' %}" class="btn btn-primary">Browse Jobs</a>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- ================= Employer view ================= -->
+        <div id="tab-employer" class="tab-panel" style="display:none;">
+          <h2><i class="fas fa-users"></i> Applications Received</h2>
+          <br>
+
+          {% if employer_apps %}
+            {% for app in employer_apps %}
+              <div class="job-card" style="margin-bottom:1rem;">
+                <h3 class="job-title">{{ app.gig.title }}</h3>
+
+                <div class="job-details">
+                  <div class="detail">
+                    <i class="fas fa-user"></i>
+                    Applicant:
+                    <a href="{% url 'worker_profile' app.applicant.id %}"
+                       style="color: var(--primary); text-decoration: none; font-weight: 600;">
+                      {{ app.applicant.first_name|default:app.applicant.username }}
+                    </a>
+                  </div>
+                  <div class="detail">
+                    <i class="fas fa-calendar-alt"></i>
+                    {{ app.applied_at|date:"d M Y, h:i A" }}
+                  </div>
+                  <div class="detail">
+                    <i class="fas fa-money-bill-wave"></i>
+                    Proposed: ₹{{ app.proposed_pay }} ({{ app.payment_method|capfirst }})
+                  </div>
+                </div>
+
+                <div style="margin-top:.5rem;">
+                  Status:
+                  <strong>
+                    {% if app.status == "pending" %}Pending
+                    {% elif app.status == "accepted" %}Accepted ✅
+                    {% elif app.status == "rejected" %}Rejected ❌
+                    {% elif app.status == "completed" %}Completed 🎉
+                    {% else %}{{ app.status }}{% endif %}
+                  </strong>
+                </div>
+
+                <!-- Employer actions -->
+                {% if app.status == "pending" %}
+                  <div style="display:flex; gap:.75rem; margin-top:1rem;">
+                    <form method="POST" action="{% url 'accept_application' app.id %}" style="flex:1;">
+                      {% csrf_token %}
+                      <button class="btn btn-primary" style="width:100%;">
+                        <i class="fas fa-check"></i> Accept
+                      </button>
+                    </form>
+
+                    <form method="POST" action="{% url 'reject_application' app.id %}" style="flex:1;">
+                      {% csrf_token %}
+                      <button class="btn" style="width:100%; background:#eee; color: var(--dark);">
+                        <i class="fas fa-times"></i> Reject
+                      </button>
+                    </form>
+                  </div>
+                {% endif %}
+
+                {% if app.status == "accepted" %}
+                  <div style="margin-top:1rem;">
+                    <form method="POST" action="{% url 'complete_job' app.id %}">
+                      {% csrf_token %}
+                      <button class="btn btn-primary" style="width:100%;">
+                        <i class="fas fa-flag-checkered"></i> Mark as Completed
+                      </button>
+                    </form>
+                  </div>
+                {% endif %}
+
+                <!-- ⭐ Employer rates worker AFTER completion -->
+                {% if app.status == "completed" %}
+                  <div style="margin-top:1rem;">
+                    {% if not app.employer_rated_worker %}
+                      <a href="{% url 'rate_worker' app.id %}" class="btn btn-primary" style="width:100%; text-align:center;">
+                        ⭐ Rate Worker
+                      </a>
+                    {% else %}
+                      <div style="padding:10px;border-radius:10px;background:#f0f7ff;color:#0b3a6b;font-weight:700;text-align:center;">
+                        ✅ You have already rated this worker
+                      </div>
+                    {% endif %}
+                  </div>
+                {% endif %}
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="job-card" style="text-align:center;">
+              <p>No one has applied yet.</p>
+              <a href="{% url 'post_job' %}" class="btn btn-primary">Post a Job</a>
+            </div>
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="footer-content">
+    <div class="footer-about">
+      <div class="footer-logo">
+        <div style="background: var(--primary); width: 40px; height: 40px; border-radius: 10px; display:flex; align-items:center; justify-content:center; color:white;">
+          <i class="fas fa-shopping-cart"></i>
+        </div>
+        <div>SkillMatch AI</div>
+      </div>
+      <p class="footer-description">
+        Empowering local communities through accessible employment opportunities. Find work or hire help with just a few clicks.
+      </p>
+    </div>
+
+    <div class="footer-links">
+      <h3>Quick Links</h3>
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/jobs/">Browse Jobs</a></li>
+        <li><a href="/post-job/">Post a Job</a></li>
+        <li><a href="/about/">About Us</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-links">
+      <h3>Support</h3>
+      <ul>
+        <li><a href="/help/">Help Center</a></li>
+        <li><a href="/safety/">Safety Guidelines</a></li>
+        <li><a href="/contact/">Contact Support</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="copyright">
+    <p>© <span id="currentYear">2026</span> SkillMatch AI. Connecting workers with opportunities.</p>
+  </div>
+</footer>
+
+</div>
+
+<script src="{% static 'js/main.js' %}"></script>
+<script>
+  document.querySelectorAll(".sidebar-tab").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".sidebar-tab").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      const target = btn.getAttribute("data-target");
+      document.querySelectorAll(".tab-panel").forEach(p => p.style.display = "none");
+      const el = document.querySelector(target);
+      if (el) el.style.display = "block";
+    });
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,731 @@
+{% load static account socialaccount %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - SkillMatch AI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        .signup-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .signup-steps::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #e0e0e0;
+            z-index: 0;
+        }
+
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            position: relative;
+            z-index: 1;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            color: #999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .step.active .step-number {
+            background: var(--primary);
+            color: white;
+        }
+
+        .step.completed .step-number {
+            background: #4caf50;
+            color: white;
+        }
+
+        .step-label {
+            font-size: 0.85rem;
+            color: #999;
+            text-align: center;
+        }
+
+        .step.active .step-label {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .form-section {
+            display: none;
+        }
+
+        .form-section.active {
+            display: block;
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .skill-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .skill-card:hover {
+            border-color: var(--primary);
+            background: #f0f7ff;
+        }
+
+        .skill-card.selected {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: white;
+        }
+
+        .skill-card i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .file-upload-area {
+            border: 2px dashed #e0e0e0;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 1rem 0;
+        }
+
+        .file-upload-area:hover {
+            border-color: var(--primary);
+            background: #f0f7ff;
+        }
+
+        .file-upload-area.drag-over {
+            border-color: var(--primary);
+            background: #f0f7ff;
+        }
+
+        .uploaded-files {
+            margin-top: 1rem;
+        }
+
+        .uploaded-file {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+
+        .uploaded-file i {
+            margin-right: 0.5rem;
+        }
+
+        .remove-file {
+            color: #dc3545;
+            cursor: pointer;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 1.5rem 0;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .divider span {
+            padding: 0 1rem;
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        .google-btn {
+            width: 100%;
+            padding: 0.875rem;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .google-btn:hover {
+            border-color: #4285f4;
+            background: #f8f9ff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.15);
+        }
+
+        .google-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .verification-info {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        .verification-info i {
+            color: #2196f3;
+            margin-right: 0.5rem;
+        }
+    </style>
+    <link rel="stylesheet" href="{% static 'css/modern-ui.css' %}">
+</head>
+<body>
+    <div class="animated-bg">
+        <div class="floating-shape"></div>
+        <div class="floating-shape"></div>
+        <div class="floating-shape"></div>
+    </div>
+
+    <div class="texture-overlay"></div>
+    <div class="mouse-follower"></div>
+
+    <header>
+        <a href="/" class="logo">
+            <div class="logo-icon">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <div>SkillMatch AI</div>
+        </a>
+    </header>
+
+    <main class="main-content">
+        <div class="form-container" style="max-width: 700px;">
+            <h2 class="form-title">Create Your Account</h2>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div role="alert" style="padding: 1rem; margin-bottom: 1rem; border-left: 4px solid #dc3545; border-radius: 8px; background: #f8d7da; color: #721c24;">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- Step Indicator -->
+            <div class="signup-steps">
+                <div class="step active" data-step="1">
+                    <div class="step-number">1</div>
+                    <div class="step-label">Basic Info</div>
+                </div>
+                <div class="step" data-step="2">
+                    <div class="step-number">2</div>
+                    <div class="step-label">Skills</div>
+                </div>
+                <div class="step" data-step="3">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Documents</div>
+                </div>
+                <div class="step" data-step="4">
+                    <div class="step-number">4</div>
+                    <div class="step-label">Review</div>
+                </div>
+            </div>
+
+            <!-- Google Sign Up Option -->
+            <div id="googleSignup">
+
+<a href="{% provider_login_url 'google' process='signup' %}" class="google-btn">
+
+
+
+    <svg class="google-icon" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+    </svg>
+    Sign up with Google
+</a>
+
+
+                <div class="divider">
+                    <span>OR</span>
+                </div>
+            </div>
+
+            <!-- Multi-step Form -->
+            <form method="POST" action="{% url 'signup' %}" enctype="multipart/form-data" id="signupForm">
+                {% csrf_token %}
+
+                <!-- Step 1: Basic Information -->
+                <div class="form-section active" data-section="1">
+                    <div class="verification-info">
+                        <i class="fas fa-shield-alt"></i>
+                        <strong>Secure Registration:</strong> Your information will be verified by our admin team before activation.
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="full-name">Full Name (As per Aadhaar)</label>
+                        <input type="text" id="full-name" name="full_name" class="form-input" placeholder="Enter your full name" required>
+                        <small style="color: var(--gray); font-size: 0.85rem;">This must match your Aadhaar card exactly</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="email">Email Address</label>
+                        <input type="email" id="email" name="email" class="form-input" placeholder="Enter your email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="username">Username</label>
+                        <input type="text" id="username" name="username" class="form-input" placeholder="Choose a username" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="phone">Phone Number</label>
+                        <input type="tel" id="phone" name="phone" class="form-input" placeholder="+91 98765 43210" pattern="[+]?[0-9]{10,13}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="password">Password</label>
+                        <input type="password" id="password" name="password" class="form-input" placeholder="Create a strong password" minlength="8" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="confirm-password">Confirm Password</label>
+                        <input type="password" id="confirm-password" name="confirm_password" class="form-input" placeholder="Re-enter password" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="account-type">I want to:</label>
+                        <select id="account-type" name="account_type" class="form-input" required>
+                            <option value="">Select account type</option>
+                            <option value="worker">Find Work (Service Provider)</option>
+                            <option value="employer">Hire Workers (Client)</option>
+                            <option value="both">Both</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Step 2: Skills Selection -->
+                <div class="form-section" data-section="2">
+                    <h3 style="margin-bottom: 1rem;">Select Your Skills</h3>
+                    <p style="color: var(--gray); margin-bottom: 1.5rem;">Choose all skills that apply. You'll upload proof in the next step.</p>
+
+                    <div class="skills-grid" id="skillsGrid">
+                        <div class="skill-card" data-skill="plumbing">
+                            <i class="fas fa-wrench"></i>
+                            <div>Plumbing</div>
+                        </div>
+                        <div class="skill-card" data-skill="electrical">
+                            <i class="fas fa-bolt"></i>
+                            <div>Electrical</div>
+                        </div>
+                        <div class="skill-card" data-skill="carpentry">
+                            <i class="fas fa-hammer"></i>
+                            <div>Carpentry</div>
+                        </div>
+                        <div class="skill-card" data-skill="painting">
+                            <i class="fas fa-paint-roller"></i>
+                            <div>Painting</div>
+                        </div>
+                        <div class="skill-card" data-skill="cleaning">
+                            <i class="fas fa-broom"></i>
+                            <div>Cleaning</div>
+                        </div>
+                        <div class="skill-card" data-skill="gardening">
+                            <i class="fas fa-leaf"></i>
+                            <div>Gardening</div>
+                        </div>
+                        <div class="skill-card" data-skill="cooking">
+                            <i class="fas fa-utensils"></i>
+                            <div>Cooking</div>
+                        </div>
+                        <div class="skill-card" data-skill="driving">
+                            <i class="fas fa-car"></i>
+                            <div>Driving</div>
+                        </div>
+                        <div class="skill-card" data-skill="tutoring">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                            <div>Tutoring</div>
+                        </div>
+                        <div class="skill-card" data-skill="delivery">
+                            <i class="fas fa-shipping-fast"></i>
+                            <div>Delivery</div>
+                        </div>
+                        <div class="skill-card" data-skill="beauty">
+                            <i class="fas fa-cut"></i>
+                            <div>Beauty/Salon</div>
+                        </div>
+                        <div class="skill-card" data-skill="repair">
+                            <i class="fas fa-tools"></i>
+                            <div>Repair Work</div>
+                        </div>
+                    </div>
+
+                    <input type="hidden" name="skills" id="selectedSkills">
+                    <div id="skillsError" style="color: #dc3545; margin-top: 1rem; display: none;">
+                        <i class="fas fa-exclamation-circle"></i> Please select at least one skill
+                    </div>
+                </div>
+
+                <!-- Step 3: Document Upload -->
+                <div class="form-section" data-section="3">
+                    <h3 style="margin-bottom: 1rem;">Upload Verification Documents</h3>
+                    
+                    <!-- Aadhaar Card Upload -->
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-id-card"></i> Aadhaar Card (Required)
+                        </label>
+                        <div class="verification-info" style="margin-bottom: 1rem;">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Important:</strong> Upload clear photos of both sides. Your name must match the name entered in Step 1.
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div>
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Front Side</label>
+                                <div class="file-upload-area" data-upload="aadhaar-front">
+                                    <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: var(--primary);"></i>
+                                    <p style="margin: 0.5rem 0; font-size: 0.9rem;">Upload Front</p>
+                                    <input type="file" name="aadhaar_front" id="aadhaarFront" accept=".pdf,.jpg,.jpeg,.png" style="display: none;" required>
+                                </div>
+                                <div class="uploaded-files" id="aadhaarFrontFiles"></div>
+                            </div>
+                            
+                            <div>
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Back Side</label>
+                                <div class="file-upload-area" data-upload="aadhaar-back">
+                                    <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: var(--primary);"></i>
+                                    <p style="margin: 0.5rem 0; font-size: 0.9rem;">Upload Back</p>
+                                    <input type="file" name="aadhaar_back" id="aadhaarBack" accept=".pdf,.jpg,.jpeg,.png" style="display: none;" required>
+                                </div>
+                                <div class="uploaded-files" id="aadhaarBackFiles"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Skill Certificates Upload -->
+                    <div class="form-group" id="skillDocsSection" style="display: none;">
+                        <label class="form-label">
+                            <i class="fas fa-certificate"></i> Skill Certificates/Proof
+                        </label>
+                        <p style="color: var(--gray); font-size: 0.9rem; margin-bottom: 1rem;">
+                            Upload certificates, licenses, or work samples for: <strong id="selectedSkillsList"></strong>
+                        </p>
+                        <div class="file-upload-area" data-upload="skill-docs">
+                            <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;"></i>
+                            <p><strong>Click to upload</strong> or drag and drop</p>
+                            <p style="font-size: 0.85rem; color: var(--gray);">Multiple files allowed (PDF, JPG, PNG - Max 5MB each)</p>
+                            <input type="file" name="skill_documents" id="skillDocs" accept=".pdf,.jpg,.jpeg,.png" multiple style="display: none;">
+                        </div>
+                        <div class="uploaded-files" id="skillDocsFiles"></div>
+                    </div>
+
+                    <!-- Profile Photo -->
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-user-circle"></i> Profile Photo (Optional)
+                        </label>
+                        <div class="file-upload-area" data-upload="photo">
+                            <i class="fas fa-camera" style="font-size: 2.5rem; color: var(--primary); margin-bottom: 0.5rem;"></i>
+                            <p><strong>Click to upload</strong> profile photo</p>
+                            <p style="font-size: 0.85rem; color: var(--gray);">JPG, PNG (Max 2MB)</p>
+                            <input type="file" name="profile_photo" id="profilePhoto" accept=".jpg,.jpeg,.png" style="display: none;">
+                        </div>
+                        <div class="uploaded-files" id="photoFiles"></div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Review & Submit -->
+                <div class="form-section" data-section="4">
+                    <h3 style="margin-bottom: 1rem;"><i class="fas fa-check-circle"></i> Review Your Application</h3>
+                    
+                    <div class="verification-info">
+                        <i class="fas fa-clock"></i>
+                        <strong>What happens next?</strong><br>
+                        • Admin reviews your documents (24-48 hours)<br>
+                        • You'll receive email notification of approval/rejection<br>
+                        • If rejected, you can resubmit with corrections
+                    </div>
+
+                    <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 12px; margin: 1.5rem 0;">
+                        <h4 style="margin-bottom: 1rem;"><i class="fas fa-user"></i> Application Summary</h4>
+                        <div style="display: grid; gap: 0.75rem;">
+                            <div><strong>Name:</strong> <span id="reviewName">-</span></div>
+                            <div><strong>Email:</strong> <span id="reviewEmail">-</span></div>
+                            <div><strong>Phone:</strong> <span id="reviewPhone">-</span></div>
+                            <div><strong>Account Type:</strong> <span id="reviewAccountType">-</span></div>
+                            <div><strong>Skills:</strong> <span id="reviewSkills">-</span></div>
+                            <div><strong>Documents Uploaded:</strong> <span id="reviewDocs">-</span></div>
+                        </div>
+                    </div>
+
+                    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 1rem; border-radius: 8px; margin: 1.5rem 0;">
+                        <i class="fas fa-exclamation-triangle" style="color: #ffc107; margin-right: 0.5rem;"></i>
+                        <strong>If Rejected:</strong> You'll receive an email explaining why. Simply log in and resubmit your application with the correct information.
+                    </div>
+
+                    <label style="display: flex; align-items: flex-start; cursor: pointer; margin: 1.5rem 0;">
+                        <input type="checkbox" name="terms" id="termsCheck" required style="margin-right: 0.75rem; margin-top: 0.25rem;">
+                        <span style="font-size: 0.9rem; color: var(--gray);">
+                            I certify that all information provided is accurate and documents are genuine. I agree to the 
+                            <a href="/terms/" target="_blank" style="color: var(--primary);">Terms of Service</a>.
+                        </span>
+                    </label>
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="nav-buttons">
+                    <button type="button" class="btn" id="prevBtn" style="flex: 1; display: none; background: #e0e0e0; color: var(--dark);">
+                        <i class="fas fa-arrow-left"></i> Previous
+                    </button>
+                    <button type="button" class="btn btn-primary" id="nextBtn" style="flex: 1;">
+                        Next <i class="fas fa-arrow-right"></i>
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn" style="flex: 1; display: none;">
+                        <i class="fas fa-paper-plane"></i> Submit Application
+                    </button>
+                </div>
+            </form>
+
+            <div style="text-align: center; margin-top: 1.6rem;">
+                <p style="color: var(--gray);">
+                    Already have an account?
+                    <a href="/login/" style="color: var(--primary); text-decoration: none; font-weight: 600;">Login here</a>
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <script src="{% static 'js/main.js' %}"></script>
+    <script>
+        // Multi-step form state
+        let currentStep = 1;
+        const totalSteps = 4;
+        const selectedSkills = new Set();
+        const uploadedFiles = {
+            aadhaarFront: null,
+            aadhaarBack: null,
+            skillDocs: [],
+            photo: null
+        };
+
+        // Navigation
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (validateStep(currentStep)) {
+                currentStep++;
+                showStep(currentStep);
+            }
+        });
+
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            currentStep--;
+            showStep(currentStep);
+        });
+
+        function showStep(step) {
+            document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+            document.querySelector(`[data-section="${step}"]`).classList.add('active');
+
+            document.querySelectorAll('.step').forEach((el, i) => {
+                el.classList.remove('active', 'completed');
+                if (i + 1 < step) el.classList.add('completed');
+                else if (i + 1 === step) el.classList.add('active');
+            });
+
+            document.getElementById('prevBtn').style.display = step === 1 ? 'none' : 'block';
+            document.getElementById('nextBtn').style.display = step === totalSteps ? 'none' : 'block';
+            document.getElementById('submitBtn').style.display = step === totalSteps ? 'block' : 'none';
+            document.getElementById('googleSignup').style.display = step === 1 ? 'block' : 'none';
+
+            if (step === 4) updateReview();
+        }
+
+        function validateStep(step) {
+            if (step === 1) {
+                const pwd = document.getElementById('password').value;
+                const confirm = document.getElementById('confirm-password').value;
+                if (pwd !== confirm) {
+                    alert('Passwords do not match!');
+                    return false;
+                }
+                if (pwd.length < 8) {
+                    alert('Password must be at least 8 characters!');
+                    return false;
+                }
+            }
+
+            if (step === 2 && selectedSkills.size === 0) {
+                document.getElementById('skillsError').style.display = 'block';
+                return false;
+            }
+
+            if (step === 3) {
+                if (!uploadedFiles.aadhaarFront || !uploadedFiles.aadhaarBack) {
+                    alert('Please upload both sides of your Aadhaar card');
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        // Skills selection
+        document.querySelectorAll('.skill-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const skill = this.dataset.skill;
+                if (selectedSkills.has(skill)) {
+                    selectedSkills.delete(skill);
+                    this.classList.remove('selected');
+                } else {
+                    selectedSkills.add(skill);
+                    this.classList.add('selected');
+                }
+                document.getElementById('selectedSkills').value = Array.from(selectedSkills).join(',');
+                document.getElementById('skillsError').style.display = 'none';
+                
+                if (selectedSkills.size > 0) {
+                    document.getElementById('skillDocsSection').style.display = 'block';
+                    document.getElementById('selectedSkillsList').textContent = Array.from(selectedSkills).join(', ');
+                } else {
+                    document.getElementById('skillDocsSection').style.display = 'none';
+                }
+            });
+        });
+
+        // File upload setup
+        function setupFileUpload(uploadAttr, inputId, containerId, fileKey) {
+            const area = document.querySelector(`[data-upload="${uploadAttr}"]`);
+            const input = document.getElementById(inputId);
+            const container = document.getElementById(containerId);
+
+            area.addEventListener('click', () => input.click());
+            area.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                area.classList.add('drag-over');
+            });
+            area.addEventListener('dragleave', () => area.classList.remove('drag-over'));
+            area.addEventListener('drop', (e) => {
+                e.preventDefault();
+                area.classList.remove('drag-over');
+                if (e.dataTransfer.files.length) {
+                    input.files = e.dataTransfer.files;
+                    handleFileSelect(input, container, fileKey);
+                }
+            });
+            input.addEventListener('change', () => handleFileSelect(input, container, fileKey));
+        }
+
+        function handleFileSelect(input, container, fileKey) {
+            container.innerHTML = '';
+            const files = Array.from(input.files);
+            
+            files.forEach(file => {
+                if (file.size > 5 * 1024 * 1024) {
+                    alert(`${file.name} exceeds 5MB limit`);
+                    return;
+                }
+
+                const div = document.createElement('div');
+                div.className = 'uploaded-file';
+                div.innerHTML = `
+                    <span><i class="fas fa-file"></i> ${file.name} (${(file.size/1024).toFixed(1)}KB)</span>
+                    <i class="fas fa-times remove-file"></i>
+                `;
+                div.querySelector('.remove-file').addEventListener('click', () => {
+                    div.remove();
+                    input.value = '';
+                    if (fileKey === 'skillDocs') {
+                        uploadedFiles[fileKey] = uploadedFiles[fileKey].filter(f => f !== file.name);
+                    } else {
+                        uploadedFiles[fileKey] = null;
+                    }
+                });
+                container.appendChild(div);
+
+                if (fileKey === 'skillDocs') {
+                    uploadedFiles[fileKey].push(file.name);
+                } else {
+                    uploadedFiles[fileKey] = file.name;
+                }
+            });
+        }
+
+        setupFileUpload('aadhaar-front', 'aadhaarFront', 'aadhaarFrontFiles', 'aadhaarFront');
+        setupFileUpload('aadhaar-back', 'aadhaarBack', 'aadhaarBackFiles', 'aadhaarBack');
+        setupFileUpload('skill-docs', 'skillDocs', 'skillDocsFiles', 'skillDocs');
+        setupFileUpload('photo', 'profilePhoto', 'photoFiles', 'photo');
+
+        function updateReview() {
+            document.getElementById('reviewName').textContent = document.getElementById('full-name').value;
+            document.getElementById('reviewEmail').textContent = document.getElementById('email').value;
+            document.getElementById('reviewPhone').textContent = document.getElementById('phone').value;
+            
+            const typeMap = {worker: 'Service Provider', employer: 'Client', both: 'Both'};
+            document.getElementById('reviewAccountType').textContent = 
+                typeMap[document.getElementById('account-type').value] || '-';
+            
+            document.getElementById('reviewSkills').textContent = 
+                Array.from(selectedSkills).join(', ') || 'None';
+            
+            const count = (uploadedFiles.aadhaarFront ? 1 : 0) + 
+                         (uploadedFiles.aadhaarBack ? 1 : 0) + 
+                         uploadedFiles.skillDocs.length + 
+                         (uploadedFiles.photo ? 1 : 0);
+            document.getElementById('reviewDocs').textContent = `${count} file(s)`;
+        }
+
+        document.getElementById('signupForm').addEventListener('submit', (e) => {
+            if (!document.getElementById('termsCheck').checked) {
+                e.preventDefault();
+                alert('Please accept the Terms and Conditions');
+            }
+        });
+    </script>
+</body>
+</html>

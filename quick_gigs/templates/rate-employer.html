@@ -1,0 +1,87 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rate Employer - SkillMatch AI</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <link rel="stylesheet" href="{% static 'css/modern-ui.css' %}">
+</head>
+<body>
+
+<div class="animated-bg">
+  <div class="floating-shape"></div>
+  <div class="floating-shape"></div>
+  <div class="floating-shape"></div>
+</div>
+
+<div class="page-container">
+  <header>
+    <a href="{% url 'home' %}" class="logo">
+      <div class="logo-icon"><i class="fas fa-shopping-cart"></i></div>
+      <div>SkillMatch AI</div>
+    </a>
+  </header>
+
+  <main class="main-content" style="max-width: 900px; margin: 0 auto;">
+    <h1 class="section-title"><i class="fas fa-star"></i> Rate Employer</h1>
+
+    {% if messages %}
+      <div style="margin: 0 0 1rem 0;">
+        {% for message in messages %}
+          <div style="padding:10px;border-radius:10px;background:#e8fff0;color:#0b6b2e;margin-bottom:8px;">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="form-container">
+      <h2 style="margin-top:0;">{{ employer_profile.full_name|default:employer.username }}</h2>
+      <p style="color: var(--gray); margin-top:.25rem;">
+        Job: <strong>{{ app.gig.title }}</strong>
+      </p>
+
+      <form method="POST">
+        {% csrf_token %}
+
+        <label style="font-weight:700; display:block; margin: 1rem 0 .5rem;">
+          Rating (1 to 5)
+        </label>
+
+        <select name="stars" class="form-input" required>
+          <option value="">Select</option>
+          <option value="5">★★★★★ (5)</option>
+          <option value="4">★★★★☆ (4)</option>
+          <option value="3">★★★☆☆ (3)</option>
+          <option value="2">★★☆☆☆ (2)</option>
+          <option value="1">★☆☆☆☆ (1)</option>
+        </select>
+
+        <label style="font-weight:700; display:block; margin: 1rem 0 .5rem;">
+          Comment (optional)
+        </label>
+        <textarea name="comment" class="form-input" rows="4" placeholder="Write feedback..."></textarea>
+
+        <button class="btn btn-primary" type="submit" style="width:100%; margin-top: 1rem;">
+          <i class="fas fa-paper-plane"></i> Submit Rating
+        </button>
+
+        <a href="{% url 'inbox' %}" class="btn" style="width:100%; margin-top: .75rem; background:#eee; color: var(--dark); text-align:center;">
+          Cancel
+        </a>
+      </form>
+    </div>
+  </main>
+
+  <footer>
+    <div class="copyright">
+      <p>© 2026 SkillMatch AI</p>
+    </div>
+  </footer>
+</div>
+
+</body>
+</html>

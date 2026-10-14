@@ -1,0 +1,292 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - SkillMatch AI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/modern-ui.css' %}">
+</head>
+<body>
+
+<div class="animated-bg">
+    <div class="floating-shape"></div>
+    <div class="floating-shape"></div>
+    <div class="floating-shape"></div>
+</div>
+
+<div class="mouse-follower"></div>
+
+<header>
+    <a href="/" class="logo">
+        <div class="logo-icon">
+            <i class="fas fa-shopping-cart"></i>
+        </div>
+        <div>SkillMatch AI</div>
+    </a>
+
+    <div class="page-nav">
+        <a href="/" class="nav-btn"><i class="fas fa-home"></i> Home</a>
+        <a href="/jobs/" class="nav-btn"><i class="fas fa-briefcase"></i> Jobs</a>
+        <a href="/job-matches/" class="nav-btn"><i class="fas fa-chart-line"></i> Job Matches</a>
+        <a href="/resume-builder/" class="nav-btn"><i class="fas fa-file-alt"></i> Resume</a>
+        <a href="/inbox/" class="nav-btn"><i class="fas fa-inbox"></i> Inbox</a>
+        <a href="/post-job/" class="nav-btn"><i class="fas fa-plus-circle"></i> Post Job</a>
+        <a href="/about/" class="nav-btn"><i class="fas fa-info-circle"></i> About</a>
+    </div>
+
+    <div class="user-actions">
+        <a href="/profile/" class="user-profile" aria-label="Open profile">
+            <div class="user-avatar">
+                {% if profile_obj.profile_photo %}
+                    <img src="{{ profile_obj.profile_photo.url }}" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                {% else %}
+                    {{ profile_obj.full_name|default:user.username|slice:":1"|upper }}
+                {% endif %}
+            </div>
+            <div class="user-name">{{ profile_obj.full_name|default:user.username }}</div>
+            <i class="fas fa-chevron-down"></i>
+        </a>
+    </div>
+</header>
+
+<main class="main-content">
+
+    {% if messages %}
+      <div style="max-width:980px;margin:0 auto 1rem auto;">
+        {% for message in messages %}
+          <div style="background:white;padding:12px 14px;border-radius:14px;box-shadow:var(--shadow);border-left:4px solid var(--primary);margin-bottom:10px;">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <h1 class="section-title">
+        <i class="fas fa-user"></i> My Profile
+    </h1>
+
+    <div class="form-container" style="max-width: 980px; margin: 0 auto;">
+
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;">
+            <div>
+                <h2 style="margin:0;">
+                    {{ profile_obj.full_name|default:user.username }}
+                </h2>
+                <p style="margin:.35rem 0 0 0; color: var(--gray);">
+                    {{ user.email|default:user.username }}
+                </p>
+                <p style="margin:.35rem 0 0 0; color: var(--gray);">
+                    {{ profile_obj.phone_number }}
+                </p>
+                <p style="margin:.35rem 0 0 0; color: var(--gray);">
+                    Account: <b>{{ acct|title }}</b> • Verification: <b>{{ profile_obj.verification_status|title }}</b>
+                </p>
+            </div>
+
+            <div style="display:flex; gap:.75rem; flex-wrap:wrap;">
+                <a class="btn btn-primary" href="/inbox/">
+                    <i class="fas fa-history"></i> Job History
+                </a>
+                <a class="btn btn-secondary" href="/inbox/">
+                    <i class="fas fa-inbox"></i> Inbox
+                </a>
+                <a class="btn" href="/logout/" style="background:#eee; color: var(--dark);">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+
+        <!-- Editable Profile (Dynamic) -->
+        <hr style="margin:1.6rem 0; border:none; border-top:1px solid #eee;">
+
+        <h2 style="margin:0 0 .9rem 0;"><i class="fas fa-pen"></i> Edit Profile</h2>
+
+        <form method="POST" enctype="multipart/form-data" style="display:grid;gap:12px;">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label class="form-label">Full Name</label>
+                <input class="form-input" name="full_name" value="{{ profile_obj.full_name }}" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Phone Number</label>
+                <input class="form-input" name="phone_number" value="{{ profile_obj.phone_number }}" placeholder="Enter phone">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Account Type</label>
+                <select class="form-input" name="account_type" required>
+                    <option value="worker" {% if acct == "worker" %}selected{% endif %}>Worker</option>
+                    <option value="employer" {% if acct == "employer" %}selected{% endif %}>Employer</option>
+                    <option value="both" {% if acct == "both" %}selected{% endif %}>Both</option>
+                </select>
+                <small style="color: var(--gray);">To post jobs, choose Employer or Both.</small>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Skills (comma separated)</label>
+                <input class="form-input" id="profile-skills" name="skills" value="{{ profile_obj.skills }}" placeholder="plumbing, cleaning, driving">
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;">
+                    <label for="profile-voice-language">Voice language</label>
+                    <select id="profile-voice-language">
+                        <option value="en-IN">English</option>
+                        <option value="ta-IN">Tamil</option>
+                    </select>
+                    <button class="btn btn-secondary" type="button" data-voice-target="profile-skills">🎤 Speak skills</button>
+                    <button class="btn btn-secondary" type="button" data-voice-stop>Stop</button>
+                </div>
+                <p id="voice-status" role="status" aria-live="polite">You can type skills if speech recognition is unavailable.</p>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Profile Photo</label>
+                <input class="form-input" type="file" name="profile_photo" accept=".jpg,.jpeg,.png">
+            </div>
+
+            <button class="btn btn-primary" type="submit">
+                <i class="fas fa-save"></i> Save
+            </button>
+        </form>
+
+        <!-- Stats -->
+        <hr style="margin:2rem 0; border:none; border-top:1px solid #eee;">
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem;">
+            <div class="job-card" style="margin:0;">
+                <div style="font-size:.95rem; color: var(--gray);">Jobs Posted</div>
+                <div style="font-size:2rem; font-weight:800; margin-top:.25rem;">
+                    {{ total_posted }}
+                </div>
+            </div>
+            <div class="job-card" style="margin:0;">
+                <div style="font-size:.95rem; color: var(--gray);">Applicants Received</div>
+                <div style="font-size:2rem; font-weight:800; margin-top:.25rem;">
+                    {{ total_applicants_received }}
+                </div>
+            </div>
+            <div class="job-card" style="margin:0;">
+                <div style="font-size:.95rem; color: var(--gray);">Applications Sent</div>
+                <div style="font-size:2rem; font-weight:800; margin-top:.25rem;">
+                    {{ total_applied_by_me }}
+                </div>
+            </div>
+        </div>
+
+        <hr style="margin:2rem 0; border:none; border-top:1px solid #eee;">
+
+        <!-- Employer: Posted gigs -->
+        {% if acct == "employer" or acct == "both" %}
+        <h2 style="margin:0 0 1rem 0;">
+            <i class="fas fa-briefcase"></i> My Posted Jobs
+        </h2>
+
+        {% if posted_gigs %}
+            <div class="jobs-grid">
+                {% for gig in posted_gigs %}
+                <div class="job-card">
+                    <h3 class="job-title">{{ gig.title }}</h3>
+                    <div class="job-details">
+                        <div class="detail">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>{{ gig.location }}</span>
+                        </div>
+                        <div class="detail">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>{{ gig.created_at|date:"d M Y" }}</span>
+                        </div>
+                        <div class="detail">
+                            <i class="fas fa-users"></i>
+                            <span>{{ gig.applicants_count }} applicant{{ gig.applicants_count|pluralize }}</span>
+                        </div>
+                    </div>
+
+                    <div class="pay">{{ gig.pay }}</div>
+
+                    <div style="margin-top: 1rem; display:flex; gap:.75rem;">
+                        <a class="btn btn-secondary" href="/inbox/" style="flex:1; text-align:center;">
+                            <i class="fas fa-inbox"></i> View Applicants
+                        </a>
+                        <a class="btn" href="/jobs/" style="flex:1; text-align:center; background:#eee; color: var(--dark);">
+                            <i class="fas fa-eye"></i> View Listing
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div style="background:white; padding:1.5rem; border-radius:16px; box-shadow: var(--shadow); text-align:center;">
+                <h3 style="margin-bottom:.5rem;">You haven’t posted any jobs yet</h3>
+                <p style="color: var(--gray); margin-bottom:1rem;">Post your first gig and start receiving applications.</p>
+                <a class="btn btn-primary" href="/post-job/">
+                    <i class="fas fa-plus-circle"></i> Post a Job
+                </a>
+            </div>
+        {% endif %}
+        {% endif %}
+
+        <!-- Worker: Applications sent -->
+        {% if acct == "worker" or acct == "both" %}
+        <hr style="margin:2rem 0; border:none; border-top:1px solid #eee;">
+
+        <h2 style="margin:0 0 1rem 0;">
+            <i class="fas fa-file-signature"></i> My Applications
+        </h2>
+
+        {% if my_applications %}
+            <div class="jobs-grid">
+                {% for app in my_applications %}
+                <div class="job-card">
+                    <h3 class="job-title">{{ app.gig.title }}</h3>
+                    <div class="job-details">
+                        <div class="detail">
+                            <i class="fas fa-user"></i>
+                            <span>Employer: {{ app.gig.employer.username }}</span>
+                        </div>
+                        <div class="detail">
+                            <i class="fas fa-clock"></i>
+                            <span>Applied: {{ app.applied_at|date:"d M Y, h:i A" }}</span>
+                        </div>
+                        <div class="detail">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Status: {{ app.status|title }}</span>
+                        </div>
+                    </div>
+
+                    <div class="pay">₹{{ app.proposed_pay }}</div>
+
+                    <div style="margin-top: 1rem;">
+                        <a class="btn btn-secondary" href="/inbox/" style="width:100%; text-align:center;">
+                            <i class="fas fa-inbox"></i> View in Inbox
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div style="background:white; padding:1.5rem; border-radius:16px; box-shadow: var(--shadow); text-align:center;">
+                <h3 style="margin-bottom:.5rem;">No applications yet</h3>
+                <p style="color: var(--gray); margin-bottom:1rem;">Browse jobs and apply to get started.</p>
+                <a class="btn btn-primary" href="/jobs/">
+                    <i class="fas fa-search"></i> Browse Jobs
+                </a>
+            </div>
+        {% endif %}
+        {% endif %}
+
+    </div>
+</main>
+
+<footer>
+    <div class="copyright">
+        <p>© 2026 SkillMatch AI. Connecting workers with opportunities.</p>
+    </div>
+</footer>
+
+<script src="{% static 'js/main.js' %}"></script>
+<script src="{% static 'js/skillmatch.js' %}" defer></script>
+</body>
+</html>

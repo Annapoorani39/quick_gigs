@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}{{ gig.title }} | SkillMatch AI{% endblock %}
+{% block content %}
+<main class="job-detail-shell">
+    <article class="job-detail-card">
+        <p class="muted">{{ gig.status|title }} job</p>
+        <h1>{{ gig.title }}</h1>
+        <p><strong>Employer:</strong> {{ gig.employer_name }}</p>
+        <p><strong>Location:</strong> {{ gig.location }}</p>
+        <p><strong>Pay:</strong> {{ gig.pay }}</p>
+        {% if gig.duration %}<p><strong>Duration:</strong> {{ gig.duration }}</p>{% endif %}
+        {% if gig.job_type %}<p><strong>Employment type:</strong> {{ gig.get_job_type_display }}</p>{% endif %}
+        {% if gig.work_schedule %}<p><strong>Work schedule:</strong> {{ gig.work_schedule }}</p>{% endif %}
+        <p><strong>Required skills:</strong> {{ gig.skills|default:"No skills listed" }}</p>
+        <section class="job-match-detail" aria-labelledby="match-detail-heading">
+            <h2 id="match-detail-heading">Your skill match</h2>
+            {% if match.match_score != None %}
+            <p><strong>{{ match.match_score }}% match.</strong> {{ match.explanation }} Match score = matched listed skills ÷ total listed required skills.</p>
+            <p><strong>Skills you have:</strong> {{ match.matched_skills|join:", "|default:"No listed skills matched yet" }}</p>
+            <p><strong>Skills to learn:</strong> {{ match.missing_skills|join:", "|default:"No gaps in listed requirements" }}</p>
+            {% if match.missing_skills %}<a class="btn btn-secondary" href="{% url 'skill_dashboard' %}?job_id={{ gig.id }}">Learn missing skills</a>{% endif %}
+            {% else %}
+            <p>No listed skill requirements; a match percentage cannot be calculated.</p>
+            {% endif %}
+        </section>
+        <h2>Job description</h2>
+        <p class="job-description">{{ gig.description|linebreaksbr }}</p>
+        {% if gig.contact_info and can_view_contact %}<p><strong>Employer contact:</strong> {{ gig.contact_info }}</p>{% endif %}
+        <div class="button-stack">
+            {% if is_owner %}
+            <p>This is your job posting.</p>
+            {% elif already_applied %}
+            <p>You have already applied to this job.</p>
+            {% else %}
+            <form method="post" action="{% url 'apply_to_gig' gig.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="proposed_pay" value="0">
+                <input type="hidden" name="payment_method" value="full">
+                <button class="btn btn-primary" type="submit">Apply to this job</button>
+            </form>
+            {% endif %}
+            <a class="btn btn-secondary" href="{% url 'jobs' %}">Back to jobs</a>
+            <a class="btn btn-secondary" href="{% url 'job_matches' %}">View job matches</a>
+        </div>
+    </article>
+</main>
+<style>
+    .job-detail-shell { max-width: 900px; margin: 0 auto; }
+    .job-detail-card { background: #fff; padding: 1.5rem; border-radius: 18px; box-shadow: 0 10px 28px rgba(15,23,42,.06); }
+    .job-detail-card .muted { color: #475569; }
+    .job-detail-card .button-stack { display: flex; gap: .75rem; flex-wrap: wrap; align-items: center; margin-top: 1.5rem; }
+</style>
+{% endblock %}

@@ -1,0 +1,305 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkillMatch AI - Find & Post Local Jobs</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <link rel="stylesheet" href="{% static 'css/modern-ui.css' %}">
+</head>
+<body>
+  <!-- Animated Background -->
+  <div class="animated-bg">
+    <div class="floating-shape"></div>
+    <div class="floating-shape"></div>
+    <div class="floating-shape"></div>
+  </div>
+
+  <div class="mouse-follower"></div>
+
+  <div class="page-container">
+    <!-- Header (same structure as inbox) -->
+    <header>
+      <a href="/" class="logo">
+        <div class="logo-icon">
+          <i class="fas fa-shopping-cart"></i>
+        </div>
+        <div>SkillMatch AI</div>
+      </a>
+
+      <nav class="nav-menu">
+        <a href="/" class="nav-link active">
+          <i class="fas fa-home"></i> Home
+        </a>
+        <a href="/jobs/" class="nav-link">
+          <i class="fas fa-briefcase"></i> Jobs
+        </a>
+        <a href="/sdg1-opportunities/" class="nav-link">
+          <i class="fas fa-hand-holding-heart"></i> SDG 1
+        </a>
+        <a href="/job-matches/" class="nav-link">
+          <i class="fas fa-chart-line"></i> Job Matches
+        </a>
+        <a href="/resume-builder/" class="nav-link">
+          <i class="fas fa-file-alt"></i> Resume
+        </a>
+        <a href="/inbox/" class="nav-link">
+          <i class="fas fa-inbox"></i> Inbox
+        </a>
+        <a href="/post-job/" class="nav-link">
+          <i class="fas fa-plus-circle"></i> Post Job
+        </a>
+        <a href="/about/" class="nav-link">
+          <i class="fas fa-info-circle"></i> About Us
+        </a>
+      </nav>
+
+      <div class="user-actions">
+        {% if user.is_authenticated %}
+          <a href="/profile/" class="user-profile" id="userProfile" aria-label="Open profile">
+            <div class="user-avatar" id="userAvatar">
+              {{ user.first_name|default:user.username|slice:":1"|upper }}
+            </div>
+            <div class="user-name" id="userName">
+              {{ user.first_name|default:user.username }}
+            </div>
+            <i class="fas fa-chevron-down"></i>
+          </a>
+        {% else %}
+          <div class="auth-buttons" id="authButtons">
+            <a href="/login/" class="auth-btn login-btn">
+              <i class="fas fa-sign-in-alt"></i> Login
+            </a>
+            <a href="/signup/" class="auth-btn signup-btn">
+              <i class="fas fa-user-plus"></i> Sign Up
+            </a>
+          </div>
+        {% endif %}
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Hero -->
+      <section class="hero">
+        <h1>Earn with SkillMatch AI</h1>
+        <p>
+          Connect with local job opportunities or find reliable workers in minutes.
+          From farming to household help, SkillMatch AI makes earning and hiring simple.
+        </p>
+
+        <div class="quote">
+          <h2><i>"Your skills, their needs — a perfect match!"</i></h2>
+        </div>
+
+        <div style="margin-top: 2.5rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+          <a href="/jobs/" class="btn btn-primary" style="font-size: 1.1rem; padding: 1rem 2.2rem;">
+            <i class="fas fa-search"></i> Explore Jobs
+          </a>
+          <a href="/post-job/" class="btn btn-secondary" style="font-size: 1.1rem; padding: 1rem 2.2rem;">
+            <i class="fas fa-plus"></i> Post a Job
+          </a>
+        </div>
+      </section>
+
+      <section class="about-section" style="margin-top: 2.5rem; background: rgba(255,255,255,0.72); border: 1px solid rgba(46,164,79,0.12); border-radius: 18px; padding: 2rem; box-shadow: 0 10px 30px rgba(31, 81, 50, 0.08);">
+        <div style="display:flex; align-items:center; gap:0.8rem; margin-bottom: 0.8rem; color: var(--primary, #2ea44f); font-weight: 700; text-transform: uppercase; letter-spacing: .08em; font-size: 0.8rem;">
+          <i class="fas fa-hand-holding-heart"></i> SDG 1 — No Poverty
+        </div>
+        <h2 style="margin: 0 0 0.8rem; font-size: clamp(1.5rem, 4vw, 2.25rem); color: #1b3d2d;">Connecting Skills to Opportunities and Building Pathways Out of Poverty.</h2>
+        <p style="margin: 0 0 1rem; line-height: 1.7; color: rgba(34,34,34,0.75);">
+          SkillMatch AI supports SDG 1 by helping people discover suitable jobs, identify missing skills, access free learning resources, and improve their employment and earning opportunities.
+        </p>
+        <div style="display:flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem;">
+          <a href="/sdg1-opportunities/" class="btn btn-primary"><i class="fas fa-briefcase"></i> SDG 1 — Opportunities for Everyone</a>
+          <a href="/sdg1-impact/" class="btn btn-secondary"><i class="fas fa-chart-line"></i> SDG 1 Impact</a>
+        </div>
+      </section>
+
+      {% if user.is_authenticated %}
+      <!-- Active Sessions Section -->
+      <section class="active-sessions-section" style="margin-top: 4rem;">
+        <h2 class="section-title">
+          <i class="fas fa-hourglass-start"></i> Active Sessions
+        </h2>
+        <div class="active-sessions-container">
+          {% if active_sessions %}
+            {% for session in active_sessions %}
+              <div class="active-session-item">
+                <div class="session-header">
+                  <div class="session-info">
+                    <h4 class="session-title">{{ session.gig.title }}</h4>
+                    <p class="session-location">
+                      <i class="fas fa-map-marker-alt"></i> {{ session.gig.location }}
+                    </p>
+                  </div>
+                  <div class="session-status active-badge">
+                    <i class="fas fa-check-circle"></i> Accepted
+                  </div>
+                </div>
+
+                <div class="session-body">
+                  {% if user.profile.account_type == 'employer' or user.profile.account_type == 'both' %}
+                    <!-- Employer View -->
+                    <div class="session-participant">
+                      <span class="label">Worker:</span>
+                      <strong>{{ session.applicant.first_name|default:session.applicant.username }}</strong>
+                      {% if session.applicant.profile.phone_number %}
+                        <span class="contact-info">
+                          <i class="fas fa-phone"></i> {{ session.applicant.profile.phone_number }}
+                        </span>
+                      {% endif %}
+                    </div>
+                  {% else %}
+                    <!-- Worker View -->
+                    <div class="session-participant">
+                      <span class="label">Employer:</span>
+                      <strong>{{ session.gig.employer_name }}</strong>
+                    </div>
+                  {% endif %}
+
+                  <div class="session-details">
+                    <div class="detail-item">
+                      <span class="label">Pay:</span>
+                      <span class="value">{{ session.gig.pay }}</span>
+                    </div>
+                    {% if session.gig.duration %}
+                      <div class="detail-item">
+                        <span class="label">Duration:</span>
+                        <span class="value">{{ session.gig.duration }}</span>
+                      </div>
+                    {% endif %}
+                    <div class="detail-item">
+                      <span class="label">Accepted:</span>
+                      <span class="value">{{ session.applied_at|date:"M d, Y" }}</span>
+                    </div>
+                  </div>
+
+                  <p class="session-description">{{ session.gig.description|truncatewords:30 }}</p>
+                </div>
+
+                <!-- ✅ FIXED FOOTER (new rating + complete flow) -->
+                <div class="session-footer">
+                  <a href="{% url 'inbox' %}" class="btn btn-small btn-primary">
+                    <i class="fas fa-comments"></i> Message
+                  </a>
+
+                  {% if user.profile.account_type == 'employer' or user.profile.account_type == 'both' %}
+                    {# Employer side #}
+
+                    {% if session.status == "accepted" %}
+                      <form method="post" action="{% url 'complete_job' session.id %}" style="margin:0;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-small btn-secondary">
+                          <i class="fas fa-flag-checkered"></i> Mark Completed
+                        </button>
+                      </form>
+
+                    {% elif session.status == "completed" %}
+                      {% if not session.employer_rated_worker %}
+                        <a href="{% url 'rate_worker' session.id %}" class="btn btn-small btn-secondary">
+                          <i class="fas fa-star"></i> Rate Worker
+                        </a>
+                      {% else %}
+                        <a href="#" class="btn btn-small btn-secondary" style="pointer-events:none; opacity:.75;">
+                          <i class="fas fa-check"></i> Rated Worker
+                        </a>
+                      {% endif %}
+
+                    {% else %}
+                      <a href="#" class="btn btn-small btn-secondary" style="pointer-events:none; opacity:.75;">
+                        <i class="fas fa-hourglass"></i> In Progress
+                      </a>
+                    {% endif %}
+
+                  {% else %}
+                    {# Worker side #}
+
+                    {% if session.status == "accepted" %}
+                      <a href="#" class="btn btn-small btn-secondary" style="pointer-events:none; opacity:.75;">
+                        <i class="fas fa-thumbs-up"></i> In Progress
+                      </a>
+
+                    {% elif session.status == "completed" %}
+                      {% if not session.worker_rated_employer %}
+                        <a href="{% url 'rate_employer' session.id %}" class="btn btn-small btn-secondary">
+                          <i class="fas fa-star"></i> Rate Employer
+                        </a>
+                      {% else %}
+                        <a href="#" class="btn btn-small btn-secondary" style="pointer-events:none; opacity:.75;">
+                          <i class="fas fa-check"></i> Rated Employer
+                        </a>
+                      {% endif %}
+
+                    {% else %}
+                      <a href="#" class="btn btn-small btn-secondary" style="pointer-events:none; opacity:.75;">
+                        <i class="fas fa-hourglass"></i> Pending
+                      </a>
+                    {% endif %}
+
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="empty-state">
+              <i class="fas fa-inbox" style="font-size: 3rem; color: #bbb; margin-bottom: 1rem;"></i>
+              <p>No active sessions yet. Accept applications from your inbox to see them here.</p>
+              <a href="/inbox/" class="btn btn-primary" style="margin-top: 1rem;">
+                <i class="fas fa-inbox"></i> Go to Inbox
+              </a>
+            </div>
+          {% endif %}
+        </div>
+      </section>
+
+      {% endif %}
+    </main>
+
+    <!-- Footer -->
+    <footer>
+      <div class="footer-content">
+        <div class="footer-about">
+          <div class="footer-logo">
+            <div style="background: var(--primary); width: 40px; height: 40px; border-radius: 10px; display:flex; align-items:center; justify-content:center; color:white;">
+              <i class="fas fa-shopping-cart"></i>
+            </div>
+            <div>SkillMatch AI</div>
+          </div>
+          <p class="footer-description">
+            Empowering local communities through accessible employment opportunities. Find work or hire help with just a few clicks.
+          </p>
+        </div>
+
+        <div class="footer-links">
+          <h3>Quick Links</h3>
+          <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/jobs/">Browse Jobs</a></li>
+            <li><a href="/sdg1-opportunities/">SDG 1</a></li>
+            <li><a href="/post-job/">Post a Job</a></li>
+            <li><a href="/about/">About Us</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-links">
+          <h3>Support</h3>
+          <ul>
+            <li><a href="/help/">Help Center</a></li>
+            <li><a href="/safety/">Safety Guidelines</a></li>
+            <li><a href="/contact/">Contact Support</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="copyright">
+        <p>© <span id="currentYear">2026</span> SkillMatch AI. Connecting workers with opportunities.</p>
+      </div>
+    </footer>
+  </div>
+
+  <script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>

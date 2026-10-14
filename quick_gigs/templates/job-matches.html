@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Job matches | SkillMatch AI{% endblock %}
+{% block content %}
+<main class="matches-shell">
+    <section class="matches-intro">
+        <p class="eyebrow">SkillMatch AI · explainable recommendations</p>
+        <h1>AI Job Matches</h1>
+        <p>Jobs are ranked using your saved skills and each published job’s listed required skills. Match score = matched required skills ÷ listed required skills. Experience and education are not scored because the job records do not currently store those requirements.</p>
+        {% if not has_saved_skills %}
+        <p class="muted">
+            {% if user.is_authenticated %}
+            No skills are saved to your profile yet. <a href="{% url 'resume_builder' %}">Upload a resume and review its extracted skills</a>, or <a href="{% url 'profile' %}">add skills to your profile</a>.
+            {% else %}
+            <a href="{% url 'login' %}">Sign in</a> to save skills to your profile, or <a href="{% url 'resume_builder' %}">review skills extracted from a resume</a>.
+            {% endif %}
+        </p>
+        {% endif %}
+        <label for="candidate-skills">Your skills (comma-separated)</label>
+        <textarea class="form-control" id="candidate-skills" rows="3">{{ user_skills }}</textarea>
+        <p class="muted">
+            Editing skills recalculates displayed scores immediately. These edits are temporary. {% if user.is_authenticated %}Save confirmed skills in <a href="{% url 'resume_builder' %}">Resume Builder</a> or <a href="{% url 'profile' %}">your profile</a>.{% else %}<a href="{% url 'login' %}">Sign in</a> to save reviewed skills.{% endif %}
+        </p>
+        <a class="btn btn-secondary" href="{% url 'resume_builder' %}">Upload resume / manage skills</a>
+    </section>
+
+    <section class="match-summary" aria-label="Match summary">
+        <article><span>Available jobs</span><strong data-summary-jobs>{{ available_jobs_count }}</strong></article>
+        <article><span>Best match</span><strong id="summary-best" data-summary-best>{% if best_match_score != None %}{{ best_match_score }}%{% else %}—{% endif %}</strong></article>
+        <article><span>Matched skills</span><strong id="summary-matched" data-summary-matched>{{ matched_skill_count }}</strong></article>
+        <article><span>Skills to learn</span><strong id="summary-missing" data-summary-missing>{{ skills_to_learn_count }}</strong></article>
+    </section>
+
+    <section class="matches-intro" aria-labelledby="simulate-heading">
+        <h2 id="simulate-heading">Skill improvement simulator</h2>
+        <p>Preview the effect of learning one currently missing skill across published jobs. This projection does not update your saved profile.</p>
+        <label for="simulate-skill">Skill to simulate</label>
+        <select class="form-control" id="simulate-skill"><option value="">Choose a missing skill</option></select>
+        <button class="btn btn-secondary" id="simulate-match" type="button">Simulate match change</button>
+        <p id="simulation-status" role="status" aria-live="polite"></p>
+    </section>
+
+    <section aria-labelledby="jobs-heading">
+        <div class="matches-heading-row">
+            <div>
+                <h2 id="jobs-heading">Recommended jobs</h2>
+                <p class="muted">Scores use the published requirements shown on each job. Jobs without listed skills have no score.</p>
+            </div>
+            <button class="btn btn-secondary" id="refresh-matches" type="button">Refresh matches</button>
+        </div>
+        <div class="match-filters" aria-label="Filter and sort matches">
+            <label>Search jobs<input class="form-control" id="match-search" type="search" placeholder="Title, company, location or skill"></label>
+            <label>Minimum match
+                <select class="form-control" id="minimum-match">
+                    <option value="0">Any score</option><option value="25">25%+</option><option value="50">50%+</option><option value="75">75%+</option><option value="100">100%</option>
+                </select>
+            </label>
+            <label>Location<input class="form-control" id="match-location" type="search" placeholder="Any location"></label>
+            <label>Job type
+                <select class="form-control" id="match-job-type">
+                    <option value="">All job types</option>
+                    <option value="full-time">Full time</option>
+                    <option value="part-time">Part time</option>
+                    <option value="contract">Contract</option>
+                    <option value="temporary">Temporary</option>
+                </select>
+            </label>
+            <label>Sort
+                <select class="form-control" id="match-sort">
+                    <option value="score">Best match</option>
+                    <option value="newest">Newest</option>
+                    <option value="title">Job title</option>
+                </select>
+            </label>
+            <button class="btn btn-secondary" id="clear-match-filters" type="button">Clear filters</button>
+        </div>
+        <p id="match-status" role="status" aria-live="polite"></p>
+        <div class="match-job-list" id="match-job-list">
+            {% for item in jobs %}
+            <article class="match-job-card" data-match-card data-job-id="{{ item.gig.id }}" data-required="{{ item.required_skills|join:'||' }}" data-company="{{ item.gig.employer_name }}" data-location="{{ item.gig.location }}" data-job-type="{{ item.gig.job_type }}" data-created="{{ item.gig.created_at|date:'U' }}" data-title="{{ item.gig.title }}" data-description="{{ item.gig.description }}" data-pay="{{ item.gig.pay }}">
+                <div class="match-job-heading">
+                    <div>
+                        <h3><a href="{% url 'job_detail' item.gig.id %}">{{ item.gig.title }}</a></h3>
+                        <p>{{ item.gig.description }}</p>
+                        <p class="muted">{{ item.gig.location }} · {{ item.gig.employer_name }}{% if item.gig.job_type %} · {{ item.gig.get_job_type_display }}{% endif %} · {{ item.gig.status|title }}</p>
+                        {% if item.gig.pay %}<p><strong>Pay:</strong> {{ item.gig.pay }}</p>{% endif %}
+                    </div>
+                    <div class="match-score-block" aria-live="polite">
+                        {% if item.match_score != None %}
+                        <strong data-score>{{ item.match_score }}%</strong>
+                        <span>Match</span>
+                        {% else %}
+                        <strong data-score>—</strong>
+                        <span>No score</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <p class="match-explanation" data-explanation>{{ item.explanation }}</p>
+                <div class="match-columns">
+                    <div>
+                        <h4>Skills you have</h4>
+                        <ul data-matched>
+                            {% for skill in item.matched_skills %}<li>{{ skill }}</li>{% empty %}<li>No listed skills matched yet.</li>{% endfor %}
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Skills to learn</h4>
+                        <ul data-missing>
+                            {% for skill in item.missing_skills %}<li>{{ skill }}</li>{% empty %}<li>No skill gaps in the listed requirements.</li>{% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <details data-resources-details {% if not item.resources %}hidden{% endif %}>
+                    <summary>Learning links for missing skills</summary>
+                    <ul data-learning-resources>
+                        {% for resource in item.resources %}
+                        <li>{{ resource.skill }}:
+                            {% for link in resource.links %}<a href="{{ link }}" target="_blank" rel="noopener noreferrer">Learning resource {{ forloop.counter }}</a>{% if not forloop.last %} · {% endif %}{% endfor %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </details>
+                <div class="match-card-actions">
+                    <a class="btn btn-secondary" href="{% url 'job_detail' item.gig.id %}">View details</a>
+                    <a class="btn btn-primary" href="{% url 'skill_dashboard' %}?job_id={{ item.gig.id }}">Learn missing skills</a>
+                </div>
+                <div class="learning-progress" data-progress-box>
+                    <h4>Learning progress</h4>
+                    <progress value="0" max="1" data-progress></progress>
+                    <span data-progress-label>0 of 0 missing skills marked complete (0%)</span>
+                    <div data-progress-options></div>
+                    <p data-progress-status role="status" aria-live="polite"></p>
+                    {% if user.is_authenticated %}
+                    <small>Completed skills are saved to your profile.</small>
+                    {% else %}
+                    <small><a href="{% url 'login' %}">Sign in</a> to save learning progress.</small>
+                    {% endif %}
+                </div>
+            </article>
+            {% empty %}
+            <p class="empty-state-copy" id="no-match-jobs">There are no open published jobs to match right now. This page does not generate sample vacancies.</p>
+            {% endfor %}
+        </div>
+        <p class="empty-state-copy" id="no-filtered-matches" hidden>No jobs match these filters. Clear filters or refresh the published jobs.</p>
+    </section>
+</main>
+<style>
+    .matches-shell { display: grid; gap: 1.5rem; }
+    .matches-intro, .match-job-card, .match-summary article { background: #fff; padding: 1.4rem; border-radius: 18px; box-shadow: 0 10px 28px rgba(15,23,42,.06); }
+    .matches-intro textarea { width: 100%; margin: .5rem 0; }
+    .eyebrow { text-transform: uppercase; letter-spacing: .12em; color: #166534; font-weight: 700; font-size: .8rem; }
+    .match-summary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:1rem; }
+    .match-summary article span,.match-summary article strong { display:block; }
+    .match-summary article span { color:#475569; }
+    .match-summary article strong { margin-top:.4rem; color:#166534; font-size:1.7rem; }
+    .matches-heading-row { display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+    .match-filters { display:grid; grid-template-columns:repeat(auto-fit,minmax(155px,1fr)); gap:.75rem; margin:1rem 0; padding:1rem; background:#f8fafc; border-radius:14px; }
+    .match-filters label { display:grid; gap:.35rem; font-weight:600; font-size:.9rem; }
+    .match-job-list { display: grid; gap: 1rem; }
+    .match-job-heading { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; }
+    .match-score-block { min-width: 88px; text-align: center; padding: .7rem; border-radius: 12px; background: #ecfdf5; color: #166534; }
+    .match-score-block strong, .match-score-block span { display: block; }
+    .match-score-block strong { font-size: 1.5rem; }
+    .match-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .match-job-card ul { padding-left: 1.2rem; }
+    .learning-progress { margin-top: 1rem; }
+    .learning-progress progress { width: min(260px, 100%); margin-right: .6rem; }
+    .learning-progress label { display: block; padding: .25rem 0; }
+    .match-explanation, .muted { color: #475569; }
+    .match-card-actions { display:flex; gap:.65rem; flex-wrap:wrap; margin-top:1rem; }
+    @media (max-width: 650px) { .match-job-heading { flex-direction: column; } .match-columns { grid-template-columns: 1fr; } .match-summary {grid-template-columns:repeat(2,minmax(0,1fr));} .matches-heading-row {align-items:flex-start; flex-direction:column;} }
+</style>
+{% endblock %}
+{% block extra_js %}
+{{ learning_resources|json_script:"learning-resources-data" }}
+{{ completed_skill_keys|json_script:"completed-skill-keys-data" }}
+<script src="{% static 'js/skillmatch.js' %}" defer></script>
+{% endblock %}

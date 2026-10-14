@@ -1,0 +1,275 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post a Job - SkillMatch AI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/modern-ui.css' %}">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="animated-bg">
+        <div class="floating-shape"></div>
+        <div class="floating-shape"></div>
+        <div class="floating-shape"></div>
+    </div>
+
+    <!-- Jumping Textures -->
+    <div class="texture-overlay"></div>
+
+    <!-- Mouse Follower -->
+    <div class="mouse-follower"></div>
+
+    <!-- Header -->
+    <header>
+        <a href="/" class="logo">
+            <div class="logo-icon">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <div>SkillMatch AI</div>
+        </a>
+
+        <div class="page-nav">
+            <a href="/" class="nav-btn" data-page="home">
+                <i class="fas fa-home"></i> Home
+            </a>
+            <a href="/jobs/" class="nav-btn" data-page="jobs">
+                <i class="fas fa-briefcase"></i> Jobs
+            </a>
+            <a href="/inbox/" class="nav-btn" data-page="inbox">
+                <i class="fas fa-inbox"></i> Inbox
+            </a>
+            <a href="/post-job/" class="nav-btn active" data-page="post">
+                <i class="fas fa-plus-circle"></i> Post Job
+            </a>
+            <a href="/about/" class="nav-btn" data-page="about">
+                <i class="fas fa-info-circle"></i> About Us
+            </a>
+        </div>
+
+        <div class="user-actions">
+            {% if user.is_authenticated %}
+                <a href="/profile/" class="user-profile" id="userProfile">
+                    <div class="user-avatar" id="userAvatar">{{ user.first_name|default:user.username|slice:":1"|upper }}</div>
+                    <div class="user-name" id="userName">{{ user.first_name|default:user.username }}</div>
+                    <i class="fas fa-chevron-down"></i>
+                </a>
+            {% else %}
+                <div class="auth-buttons" id="authButtons">
+                    <a href="/login/" class="auth-btn login-btn">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </a>
+                    <a href="/signup/" class="auth-btn signup-btn">
+                        <i class="fas fa-user-plus"></i> Sign Up
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="form-container">
+            <h2 class="form-title">Post a Job</h2>
+            <p style="text-align: center; color: var(--gray); margin-bottom: 2rem;">
+                Fill in the details to post your job opportunity
+            </p>
+
+            <!-- ✅ Django messages (color-coded) -->
+            {% if messages %}
+  <div style="margin: 0 0 1rem 0;">
+    {% for message in messages %}
+      {% if message.tags == "success" %}
+        <div style="padding:10px;border-radius:10px;background:#e8fff0;color:#0b6b2e;">
+          {{ message }}
+        </div>
+      {% elif message.tags == "error" %}
+        <div style="padding:10px;border-radius:10px;background:#ffe8e8;color:#b00020;">
+          {{ message }}
+        </div>
+      {% elif message.tags == "info" %}
+        <div style="padding:10px;border-radius:10px;background:#e8f1ff;color:#1a4fb3;">
+          {{ message }}
+        </div>
+      {% else %}
+        <div style="padding:10px;border-radius:10px;background:#f2f2f2;color:#333;">
+          {{ message }}
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+{% endif %}
+
+            {% if form_errors %}
+            <div role="alert" style="margin: 0 0 1rem 0;padding:10px;border-radius:10px;background:#ffe8e8;color:#b00020;">
+                <ul style="margin:0;padding-left:1.25rem;">
+                    {% for field_errors in form_errors.values %}{% for error in field_errors %}<li>{{ error }}</li>{% endfor %}{% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            <style>.field-error { display: block; color: #b00020; }</style>
+
+            <!-- ✅ Django POST form -->
+            <form method="POST" action="{% url 'post_job' %}">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label class="form-label" for="job-title">Job Title *</label>
+                    <input type="text" id="job-title" name="title" class="form-input"
+                           value="{{ request.POST.title|default:'' }}"
+                           placeholder="e.g. Harvesting helper" required>
+                    {% for error in form_errors.title %}<small class="field-error">{{ error }}</small>{% endfor %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="employer-name">Your Name/Organization *</label>
+                    <input type="text" id="employer-name" name="employer_name" class="form-input"
+                           value="{{ request.POST.employer_name|default:'' }}"
+                           placeholder="Your name or organization" required>
+                    {% for error in form_errors.employer_name %}<small class="field-error">{{ error }}</small>{% endfor %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="location">Location *</label>
+                    <input type="text" id="location" name="location" class="form-input"
+                           value="{{ request.POST.location|default:'' }}"
+                           placeholder="Village / Town / District" required>
+                    {% for error in form_errors.location %}<small class="field-error">{{ error }}</small>{% endfor %}
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="pay">Pay Offered *</label>
+                        <input type="text" id="pay" name="pay" class="form-input"
+                               value="{{ request.POST.pay|default:'' }}"
+                               placeholder="e.g. ₹200/day or ₹5000 total" required>
+                        {% for error in form_errors.pay %}<small class="field-error">{{ error }}</small>{% endfor %}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="duration">Duration</label>
+                        <input type="text" id="duration" name="duration" class="form-input"
+                               value="{{ request.POST.duration|default:'' }}" maxlength="100"
+                               placeholder="e.g. 5 days or Ongoing">
+                        {% for error in form_errors.duration %}<small class="field-error">{{ error }}</small>{% endfor %}
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    
+
+                    <div class="form-group">
+                        <label class="form-label" for="job-type">Job Type</label>
+                        <select id="job-type" name="job_type" class="form-input" required>
+                            <option value="">Select job type</option>
+                            <option value="full-time" {% if request.POST.job_type == "full-time" %}selected{% endif %}>Full Time</option>
+                            <option value="part-time" {% if request.POST.job_type == "part-time" %}selected{% endif %}>Part Time</option>
+                            <option value="contract" {% if request.POST.job_type == "contract" %}selected{% endif %}>Contract</option>
+                            <option value="temporary" {% if request.POST.job_type == "temporary" %}selected{% endif %}>Temporary</option>
+                        </select>
+                        {% for error in form_errors.job_type %}<small class="field-error">{{ error }}</small>{% endfor %}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="skills">Skills Required</label>
+                    <input type="text" id="skills" name="skills" class="form-input" required
+                           value="{{ request.POST.skills|default:'' }}"
+                           placeholder="e.g. Carpentry, Driving, None required">
+                    <small style="color: var(--gray);">Separate multiple skills with commas</small>
+                    {% for error in form_errors.skills %}<small class="field-error">{{ error }}</small>{% endfor %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="schedule">Work Schedule</label>
+                    <input type="text" id="schedule" name="schedule" class="form-input"
+                           value="{{ request.POST.schedule|default:'' }}"
+                           placeholder="e.g. 9 AM - 5 PM, Monday to Friday" maxlength="200">
+                    {% for error in form_errors.work_schedule %}<small class="field-error">{{ error }}</small>{% endfor %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="description">Job Description *</label>
+                    <textarea id="description" name="description" class="form-input" rows="5"
+                              placeholder="Describe the job details, responsibilities, and requirements..." required>{{ request.POST.description|default:'' }}</textarea>
+                    {% for error in form_errors.description %}<small class="field-error">{{ error }}</small>{% endfor %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="contact-info">Contact Information</label>
+                    <input type="text" id="contact-info" name="contact_info" class="form-input"
+                           value="{{ request.POST.contact_info|default:'' }}"
+                           placeholder="Phone number or email for applicants" maxlength="200">
+                    <small style="color: var(--gray);">This will be visible to applicants</small>
+                    {% for error in form_errors.contact_info %}<small class="field-error">{{ error }}</small>{% endfor %}
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 2.5rem;">
+                    <button class="btn btn-primary" style="flex: 1;" type="submit" data-submit-once>
+                        <i class="fas fa-check-circle"></i> Post Job
+                    </button>
+                    <a href="/jobs/" class="btn btn-secondary" style="flex: 1; text-align: center;">
+                        <i class="fas fa-times-circle"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-about">
+                <div class="footer-logo">
+                    <div style="background: var(--primary); width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <div>SkillMatch AI</div>
+                </div>
+                <p class="footer-description">
+                    Empowering local communities through accessible employment opportunities. Find work or hire help with just a few clicks.
+                </p>
+            </div>
+
+            <div class="footer-links">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/jobs/">Browse Jobs</a></li>
+                    <li><a href="/post-job/">Post a Job</a></li>
+                    <li><a href="/about/">About Us</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-links">
+                <h3>Support</h3>
+                <ul>
+                    <li><a href="/help/">Help Center</a></li>
+                    <li><a href="/safety/">Safety Guidelines</a></li>
+                    <li><a href="/contact/">Contact Support</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="copyright">
+            <p>© <span id="currentYear">2026</span> SkillMatch AI. Connecting workers with opportunities.</p>
+        </div>
+    </footer>
+
+    <script src="{% static 'js/main.js' %}"></script>
+    <script>
+        document.querySelectorAll("form [data-submit-once]").forEach((button) => {
+            const form = button.form;
+            if (!form) return;
+            form.addEventListener("submit", () => {
+                if (!form.checkValidity()) return;
+                button.disabled = true;
+                button.textContent = "Submitting…";
+            });
+        });
+    </script>
+</body>
+</html>

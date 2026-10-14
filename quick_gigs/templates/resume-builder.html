@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Resume Builder | SkillMatch AI{% endblock %}
+{% block content %}
+<div class="resume-layout" id="resume-builder">
+    <section class="resume-panel">
+        <h1>Resume builder</h1>
+        <p class="lead">Build and review your resume using information you provide. Nothing is added unless you confirm it.</p>
+
+        <div class="form-group">
+            <label for="resume-upload">Extract details from an existing resume (PDF or DOCX, max 5 MB)</label>
+            <input class="form-control" id="resume-upload" type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+            <button class="btn btn-secondary" id="extract-resume" type="button">Extract resume details</button>
+            <p id="upload-status" role="status" aria-live="polite"></p>
+            <div id="extracted-sections" aria-live="polite"></div>
+        </div>
+
+        <form id="resume-form">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="resume-name">Name</label>
+                <input class="form-control" id="resume-name" name="full_name" maxlength="200" value="{{ profile_name }}">
+            </div>
+            <div class="form-group">
+                <label for="resume-email">Email</label>
+                <input class="form-control" id="resume-email" name="email" type="email" maxlength="254" value="{{ profile_email }}">
+            </div>
+            <div class="form-group">
+                <label for="resume-phone">Phone</label>
+                <input class="form-control" id="resume-phone" name="phone" type="tel" maxlength="30" value="{{ profile_phone }}">
+            </div>
+            <div class="form-group">
+                <label for="resume-location">Location</label>
+                <input class="form-control" id="resume-location" name="location" maxlength="200">
+            </div>
+            <div class="form-group">
+                <label for="target-job">Target job (optional)</label>
+                <input class="form-control" id="target-job" name="target_job" maxlength="200">
+            </div>
+            <div class="form-group">
+                <label for="resume-objective">Career objective</label>
+                <textarea class="form-control" id="resume-objective" name="objective" rows="3" maxlength="2000"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="resume-education">Education</label>
+                <textarea class="form-control" id="resume-education" name="education" rows="3" maxlength="4000"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="resume-skills">Skills (edit the detected skills before using them)</label>
+                <textarea class="form-control" id="resume-skills" name="skills" rows="2" maxlength="2000">{{ profile_skills }}</textarea>
+                <div id="skill-tags" class="skill-tags" aria-live="polite"></div>
+                <div class="voice-controls">
+                    <label for="new-skill">Add a skill</label>
+                    <input class="form-control" id="new-skill" maxlength="100">
+                    <button class="btn btn-secondary" id="add-skill" type="button">Add skill</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="resume-projects">Projects</label>
+                <textarea class="form-control" id="resume-projects" name="projects" rows="3" maxlength="4000"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="resume-experience">Experience / work history</label>
+                <textarea class="form-control" id="resume-experience" name="experience" rows="5" maxlength="10000"></textarea>
+                <div class="voice-controls">
+                    <label for="voice-language">Voice language</label>
+                    <select class="form-control" id="voice-language">
+                        <option value="en-IN">English</option>
+                        <option value="ta-IN">Tamil</option>
+                    </select>
+                    <button class="btn btn-secondary" type="button" data-voice-target="resume-experience">🎤 Start voice input</button>
+                    <button class="btn btn-secondary" type="button" data-voice-stop>Stop voice input</button>
+                </div>
+                <p id="voice-status" role="status" aria-live="polite">You can type or edit this field if speech recognition is unavailable.</p>
+            </div>
+            <div class="form-group">
+                <label for="resume-certifications">Certifications</label>
+                <textarea class="form-control" id="resume-certifications" name="certifications" rows="2" maxlength="4000"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="resume-languages">Languages</label>
+                <input class="form-control" id="resume-languages" name="languages" maxlength="500">
+            </div>
+            <div class="button-stack">
+                <button class="btn btn-primary" type="submit">Generate preview</button>
+                <button class="btn btn-secondary" id="download-pdf" type="button">Download PDF / Print</button>
+                <button class="btn btn-secondary" id="save-resume-skills" type="button" {% if not user.is_authenticated %}disabled{% endif %}>Save reviewed skills to profile</button>
+            </div>
+            <p id="resume-status" role="status" aria-live="polite"></p>
+        </form>
+        {% if not user.is_authenticated %}
+        <p><a href="{% url 'login' %}">Sign in</a> to save reviewed skills to your profile.</p>
+        {% endif %}
+    </section>
+
+    <aside class="resume-preview">
+        <h2>Resume preview</h2>
+        <article class="resume-card" id="resume-preview" aria-live="polite">
+            <h3>Enter your details to preview your resume</h3>
+        </article>
+    </aside>
+</div>
+
+<style>
+  .resume-layout { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 1.5rem; align-items: start; }
+  .resume-panel, .resume-preview { background: white; border-radius: 18px; padding: 1.5rem; box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06); }
+  .resume-panel textarea, .resume-panel input, .resume-panel select { width: 100%; }
+  .button-stack, .voice-controls { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: end; margin-top: 0.75rem; }
+  .resume-card { background: linear-gradient(180deg, #fff, #f8fafc); border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.5rem; overflow-wrap: anywhere; }
+  .resume-card h4 { margin-top: 1rem; }
+  .resume-card p { white-space: pre-wrap; }
+  .skill-tag { background: #ecfdf5; color: #166534; border: 0; padding: .45rem .7rem; border-radius: 999px; font-weight: 600; }
+  #extracted-sections { white-space: pre-wrap; }
+  @media (max-width: 800px) { .resume-layout { grid-template-columns: 1fr; } }
+  @media print { body * { visibility: hidden; } #resume-preview, #resume-preview * { visibility: visible; } #resume-preview { position: absolute; inset: 0; width: 100%; font-family: "Nirmala UI", "Noto Sans Tamil", sans-serif; } }
+</style>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/skillmatch.js' %}" defer></script>
+{% endblock %}

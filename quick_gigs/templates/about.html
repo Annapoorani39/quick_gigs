@@ -1,0 +1,239 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us - SkillMatch AI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/modern-ui.css' %}">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="animated-bg">
+        <div class="floating-shape"></div>
+        <div class="floating-shape"></div>
+        <div class="floating-shape"></div>
+    </div>
+
+    <!-- Jumping Textures -->
+    <div class="texture-overlay"></div>
+
+    <!-- Mouse Follower -->
+    <div class="mouse-follower"></div>
+
+    <!-- Header -->
+    <header>
+        <!-- SkillMatch AI Logo -->
+        <a href="/" class="logo">
+            <div class="logo-icon">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <div>SkillMatch AI</div>
+        </a>
+
+        <!-- Page Navigation Buttons -->
+        <div class="page-nav">
+            <a href="/" class="nav-btn" data-page="home">
+                <i class="fas fa-home"></i> Home
+            </a>
+            <a href="/jobs/" class="nav-btn" data-page="jobs">
+                <i class="fas fa-briefcase"></i> Jobs
+            </a>
+            <a href="/sdg1-opportunities/" class="nav-btn" data-page="sdg1">
+                <i class="fas fa-hand-holding-heart"></i> SDG 1
+            </a>
+            <a href="/inbox/" class="nav-btn" data-page="inbox">
+                <i class="fas fa-inbox"></i> Inbox
+            </a>
+            <a href="/post-job/" class="nav-btn" data-page="post">
+                <i class="fas fa-plus-circle"></i> Post Job
+            </a>
+            <a href="/about/" class="nav-btn active" data-page="about">
+                <i class="fas fa-info-circle"></i> About Us
+            </a>
+        </div>
+
+        <!-- User Actions (Django auth-based) -->
+        <div class="user-actions">
+            {% if user.is_authenticated %}
+                <a href="/profile/" class="user-profile" id="userProfile" aria-label="Open profile">
+                    <div class="user-avatar" id="userAvatar">
+                        {{ user.first_name|default:user.username|slice:":1"|upper }}
+                    </div>
+                    <div class="user-name" id="userName">
+                        {{ user.first_name|default:user.username }}
+                    </div>
+                    <i class="fas fa-chevron-down"></i>
+                </a>
+            {% else %}
+                <div class="auth-buttons" id="authButtons">
+                    <a href="/login/" class="auth-btn login-btn">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </a>
+                    <a href="/signup/" class="auth-btn signup-btn">
+                        <i class="fas fa-user-plus"></i> Sign Up
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="about-container">
+            <h1 class="section-title">
+                <i class="fas fa-info-circle"></i> About SkillMatch AI
+            </h1>
+
+            <div class="about-section">
+                <h2><i class="fas fa-rocket"></i> Our Mission</h2>
+                <p>
+                    SkillMatch AI is on a mission to democratize access to employment opportunities by connecting local workers
+                    with immediate job opportunities. We believe everyone deserves a fair chance to earn a livelihood with dignity.
+                </p>
+                <p>
+                    Founded in 2025, SkillMatch AI helps workers find temporary and permanent jobs while assisting employers
+                    in finding reliable help for their needs.
+                </p>
+            </div>
+
+            <div class="about-section" style="background: rgba(46,164,79,0.05); border-radius: 16px; padding: 1.5rem; border: 1px solid rgba(46,164,79,0.12);">
+                <h2><i class="fas fa-hand-holding-heart"></i> SDG 1 — No Poverty</h2>
+                <p>
+                    SkillMatch AI supports SDG 1 by helping people discover suitable jobs, identify missing skills, access free learning resources, and improve their employment and earning opportunities.
+                </p>
+                <p>
+                    The tagline, "Connecting Skills to Opportunities and Building Pathways Out of Poverty," reflects our goal to help job seekers, fresh graduates, daily-wage workers, and underemployed people find practical opportunities and pathways to better livelihoods.
+                </p>
+                <p>
+                    This initiative is aligned with the United Nations SDG 1 reference at <a href="https://sdgs.un.org/goals/goal1" target="_blank" rel="noopener noreferrer">https://sdgs.un.org/goals/goal1</a> and does not claim official affiliation with the United Nations.
+                </p>
+                <div style="display:flex; gap:1rem; flex-wrap:wrap; margin-top: 1rem;">
+                    <a href="/sdg1-opportunities/" class="btn btn-primary"><i class="fas fa-briefcase"></i> SDG 1 — Opportunities for Everyone</a>
+                    <a href="/sdg1-impact/" class="btn btn-secondary"><i class="fas fa-chart-line"></i> SDG 1 Impact</a>
+                </div>
+            </div>
+
+            <div class="about-section">
+                <h2><i class="fas fa-eye"></i> Our Vision</h2>
+                <p>
+                    We envision a world where no one is unemployed due to lack of access to job opportunities. Through technology,
+                    we aim to bridge the gap between job seekers and providers in local communities.
+                </p>
+                <p>
+                    Our platform is designed specifically for rural and semi-urban areas where traditional job portals often fail to reach.
+                </p>
+            </div>
+
+            <div class="about-section">
+                <h2><i class="fas fa-handshake"></i> How It Works</h2>
+                <p>
+                    <strong>For Job Seekers:</strong> Browse available gigs in your area, apply with one click, and start earning.
+                    No complicated resumes needed.
+                </p>
+                <p>
+                    <strong>For Job Providers:</strong> Post your job requirements, connect with verified local workers,
+                    and get your work done efficiently.
+                </p>
+            </div>
+
+            <div class="about-section">
+                <h2><i class="fas fa-shield-alt"></i> Safety &amp; Trust</h2>
+                <p>At SkillMatch AI, we prioritize the safety and security of both job seekers and employers. Our platform includes:</p>
+                <ul style="color: var(--gray); line-height: 1.7; margin-left: 1.5rem; margin-bottom: 1.5rem;">
+                    <li>User verification through phone and ID checks</li>
+                    <li>Secure messaging system for communication</li>
+                    <li>Rating and review system for accountability</li>
+                    <li>Customer support for any issues</li>
+                    <li>Clear guidelines for fair pay and working conditions</li>
+                </ul>
+            </div>
+
+            <div class="values-grid">
+                <div class="value-card">
+                    <div class="value-icon"><i class="fas fa-bolt"></i></div>
+                    <h3>Quick Connections</h3>
+                    <p>Connect with workers or jobs quickly. Immediate hiring for urgent needs.</p>
+                </div>
+
+                <div class="value-card">
+                    <div class="value-icon"><i class="fas fa-shield-alt"></i></div>
+                    <h3>Verified Users</h3>
+                    <p>Authentication and accountability through verified users.</p>
+                </div>
+
+                <div class="value-card">
+                    <div class="value-icon"><i class="fas fa-rupee-sign"></i></div>
+                    <h3>Fair Pay</h3>
+                    <p>Transparent pricing and fair wages for all work.</p>
+                </div>
+
+                <div class="value-card">
+                    <div class="value-icon"><i class="fas fa-comments"></i></div>
+                    <h3>Direct Communication</h3>
+                    <p>Chat directly with employers or workers for clear expectations.</p>
+                </div>
+            </div>
+
+            <br>
+
+            
+            <div style="text-align: center; margin-top: 3rem;">
+                <a href="/jobs/" class="btn btn-primary" style="font-size: 1.1rem; padding: 1rem 2rem;">
+                    <i class="fas fa-briefcase"></i> Browse Jobs
+                </a>
+                <br>
+                <a href="/post-job/" class="btn btn-secondary" style="font-size: 1.1rem; padding: 1rem 2rem; margin-left: 1rem;">
+                    <i class="fas fa-plus"></i> Post a Job
+                </a>
+                <br>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-about">
+                <div class="footer-logo">
+                    <div style="background: var(--primary); width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <div>SkillMatch AI</div>
+                </div>
+                <p class="footer-description">
+                    Empowering local communities through accessible employment opportunities. Find work or hire help with just a few clicks.
+                </p>
+            </div>
+
+            <div class="footer-links">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/jobs/">Browse Jobs</a></li>
+                    <li><a href="/sdg1-opportunities/">SDG 1</a></li>
+                    <li><a href="/post-job/">Post a Job</a></li>
+                    <li><a href="/about/">About Us</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-links">
+                <h3>Support</h3>
+                <ul>
+                    <li><a href="/help/">Help Center</a></li>
+                    <li><a href="/safety/">Safety Guidelines</a></li>
+                    <li><a href="/contact/">Contact Support</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="copyright">
+            <p>© <span id="currentYear">2025</span> SkillMatch AI. Connecting workers with opportunities.</p>
+        </div>
+    </footer>
+
+    <script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>

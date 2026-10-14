@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Verification Status - SkillMatch AI{% endblock %}
+{% block content %}
+<section class="card-panel" style="max-width: 720px; margin: 2rem auto;">
+    <p class="eyebrow">Account verification</p>
+    {% if profile.verification_status == "pending" %}
+    <h1>Verification pending</h1>
+    <p>Your registration is saved and is waiting for review. You can sign in after an administrator approves your profile.</p>
+    <p>Check back later or contact <a href="{% url 'contact_support' %}">SkillMatch AI support</a> if you need help.</p>
+    {% elif profile.verification_status == "rejected" %}
+    <h1>Verification needs attention</h1>
+    <p>Your profile was not approved. Review the reason below and contact support for instructions on correcting or resubmitting your documents.</p>
+    {% if profile.rejection_reason %}
+    <p><strong>Review note:</strong> {{ profile.rejection_reason }}</p>
+    {% endif %}
+    <p><a href="{% url 'contact_support' %}">Contact SkillMatch AI support</a></p>
+    {% elif account_inactive %}
+    <h1>Account approved, sign-in unavailable</h1>
+    <p>Your profile is approved, but this account is inactive. Please contact <a href="{% url 'contact_support' %}">SkillMatch AI support</a> to resolve the account status.</p>
+    {% endif %}
+
+    <dl>
+        <dt>Account type</dt>
+        <dd>{{ profile.get_account_type_display }}</dd>
+        <dt>Profile status</dt>
+        <dd>{{ profile.get_verification_status_display }}</dd>
+        <dt>Aadhaar status</dt>
+        <dd>{% if profile.aadhaar_verified %}Verified by an administrator{% else %}Not yet marked verified{% endif %}</dd>
+        <dt>Documents submitted</dt>
+        <dd>{{ profile.verification_documents.count }}</dd>
+    </dl>
+    <p>Document and Aadhaar checks are completed by an administrator. This page does not approve identity documents automatically.</p>
+    <a class="btn btn-primary" href="{% url 'login' %}">Return to login</a>
+</section>
+{% endblock %}

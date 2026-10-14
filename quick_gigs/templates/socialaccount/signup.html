@@ -1,0 +1,139 @@
+{% load static %}
+{% load i18n %}
+{% load account %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Finish Signup - SkillMatch AI</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+  <style>
+    .hint {
+      color: var(--gray);
+      font-size: .9rem;
+      margin-top: .25rem;
+      line-height: 1.4;
+    }
+    .provider-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .45rem .75rem;
+      border-radius: 999px;
+      border: 1px solid #e0e0e0;
+      background: rgba(255,255,255,.7);
+      margin: .75rem 0 1.25rem;
+      font-weight: 600;
+    }
+    .provider-pill i { color: #4285f4; }
+    .note-box{
+      background: #e3f2fd;
+      border-left: 4px solid #2196f3;
+      padding: 1rem;
+      border-radius: 10px;
+      margin-bottom: 1.25rem;
+      color: #0c5460;
+    }
+    .note-box i { margin-right: .5rem; color: #2196f3; }
+    .btn-row{
+      display:flex;
+      gap: .75rem;
+      margin-top: 1.25rem;
+      flex-wrap: wrap;
+    }
+    .btn-secondary{
+      background: #e0e0e0;
+      color: var(--dark);
+    }
+    .btn-secondary:hover{
+      filter: brightness(.97);
+    }
+  </style>
+  <link rel="stylesheet" href="{% static 'css/modern-ui.css' %}">
+</head>
+
+<body>
+  <!-- Animated Background -->
+  <div class="animated-bg">
+      <div class="floating-shape"></div>
+      <div class="floating-shape"></div>
+      <div class="floating-shape"></div>
+  </div>
+  <div class="texture-overlay"></div>
+  <div class="mouse-follower"></div>
+
+  <header>
+      <a href="/" class="logo">
+          <div class="logo-icon">
+              <i class="fas fa-shopping-cart"></i>
+          </div>
+          <div>SkillMatch AI</div>
+      </a>
+  </header>
+
+  <main class="main-content">
+    <div class="form-container" style="max-width: 560px;">
+      <h2 class="form-title">Almost there ✨</h2>
+
+      <div class="provider-pill">
+        <i class="fa-brands fa-google"></i>
+        Signed in with Google
+      </div>
+
+      <div class="note-box">
+        <i class="fas fa-shield-alt"></i>
+        <strong>One last step:</strong> confirm your email to create your SkillMatch AI account.
+      </div>
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+          {{ form.non_field_errors }}
+        </div>
+      {% endif %}
+
+      <form method="post" action="">
+        {% csrf_token %}
+
+        <div class="form-group">
+          <label class="form-label" for="id_email">Email Address</label>
+          {{ form.email }}
+          <div class="hint">
+            This email will be used for login and verification updates.
+          </div>
+          {% if form.email.errors %}
+            <div class="hint" style="color:#dc3545;">
+              {{ form.email.errors }}
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="btn-row">
+          <button type="submit" class="btn btn-primary" style="flex:1;">
+            <i class="fas fa-user-check"></i> Create account
+          </button>
+          <a class="btn btn-secondary" style="flex:1; text-align:center; text-decoration:none;"
+             href="/login/">
+            <i class="fas fa-arrow-left"></i> Back to login
+          </a>
+        </div>
+      </form>
+
+      <div style="text-align:center; margin-top: 1.25rem;">
+        <p style="color: var(--gray);">
+          Want to register as worker/client with documents?
+          <a href="/signup/" style="color: var(--primary); text-decoration:none; font-weight:600;">
+            Use full signup
+          </a>
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>

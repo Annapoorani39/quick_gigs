@@ -1,0 +1,180 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Employer Profile - SkillMatch AI</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <link rel="stylesheet" href="{% static 'css/modern-ui.css' %}">
+</head>
+<body>
+
+<div class="animated-bg">
+  <div class="floating-shape"></div>
+  <div class="floating-shape"></div>
+  <div class="floating-shape"></div>
+</div>
+
+<header>
+  <a href="{% url 'home' %}" class="logo">
+    <div class="logo-icon"><i class="fas fa-shopping-cart"></i></div>
+    <div>SkillMatch AI</div>
+  </a>
+
+  <div class="page-nav">
+    <a href="{% url 'home' %}" class="nav-btn"><i class="fas fa-home"></i> Home</a>
+    <a href="{% url 'jobs' %}" class="nav-btn"><i class="fas fa-briefcase"></i> Jobs</a>
+    <a href="{% url 'inbox' %}" class="nav-btn"><i class="fas fa-inbox"></i> Inbox</a>
+    <a href="{% url 'post_job' %}" class="nav-btn"><i class="fas fa-plus-circle"></i> Post Job</a>
+    <a href="{% url 'about' %}" class="nav-btn"><i class="fas fa-info-circle"></i> About</a>
+  </div>
+
+  <div class="user-actions">
+    {% if user.is_authenticated %}
+      <a href="{% url 'profile' %}" class="user-profile">
+        <div class="user-avatar">{{ user.first_name|default:user.username|slice:":1"|upper }}</div>
+        <div class="user-name">{{ user.first_name|default:user.username }}</div>
+        <i class="fas fa-chevron-down"></i>
+      </a>
+    {% else %}
+      <div class="auth-buttons">
+        <a href="{% url 'login' %}" class="auth-btn login-btn"><i class="fas fa-sign-in-alt"></i> Login</a>
+        <a href="{% url 'signup' %}" class="auth-btn signup-btn"><i class="fas fa-user-plus"></i> Sign Up</a>
+      </div>
+    {% endif %}
+  </div>
+</header>
+
+<main class="main-content">
+  <h1 class="section-title">
+    <i class="fas fa-user-tie"></i> Employer Profile
+  </h1>
+
+  <div class="form-container" style="max-width: 980px; margin: 0 auto;">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; flex-wrap:wrap;">
+      <div>
+        <h2 style="margin:0;">{{ profile.full_name|default:employer.username }}</h2>
+        <p style="margin:.35rem 0 0 0; color: var(--gray);">
+          {{ employer.email|default:employer.username }}
+        </p>
+        <p style="margin:.35rem 0 0 0; color: var(--gray);">
+          {{ profile.phone_number }}
+        </p>
+
+        <!-- ⭐ Rating Summary -->
+        <div style="margin-top: .75rem; display:flex; align-items:center; gap:.75rem; flex-wrap:wrap;">
+          <div style="font-size:1.1rem; font-weight:800;">
+            {{ avg_rating|floatformat:1 }}
+          </div>
+
+          <div style="display:flex; gap:.15rem; color:#f5b301;">
+            {% with rounded=avg_rating|floatformat:0 %}
+              {% if avg_rating >= 1 %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
+              {% if avg_rating >= 2 %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
+              {% if avg_rating >= 3 %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
+              {% if avg_rating >= 4 %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
+              {% if avg_rating >= 5 %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
+            {% endwith %}
+          </div>
+
+          <div style="color: var(--gray); font-weight:600;">
+            ({{ rating_count }} review{{ rating_count|pluralize }})
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+        <div class="job-card" style="margin:0; min-width:180px;">
+          <div style="font-size:.95rem; color: var(--gray);">Jobs Posted</div>
+          <div style="font-size:2rem; font-weight:800;">{{ total_posted }}</div>
+        </div>
+        <div class="job-card" style="margin:0; min-width:220px;">
+          <div style="font-size:.95rem; color: var(--gray);">Applicants Received</div>
+          <div style="font-size:2rem; font-weight:800;">{{ total_applicants }}</div>
+        </div>
+      </div>
+    </div>
+
+    <hr style="margin:2rem 0; border:none; border-top:1px solid #eee;">
+
+    <!-- Recent Reviews -->
+    <h2 style="margin:0 0 1rem 0;"><i class="fas fa-star"></i> Recent Reviews</h2>
+
+    {% if rating_count > 0 %}
+      <div style="display:grid; gap:1rem; margin-bottom:2rem;">
+        {% for r in recent_ratings %}
+          <div class="job-card" style="margin:0;">
+            <div style="display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
+              <div style="font-weight:800;">
+                {{ r.rater.first_name|default:r.rater.username }}
+              </div>
+              <div style="color: var(--gray); font-size:.9rem;">
+                {{ r.created_at|date:"d M Y, h:i A" }}
+              </div>
+            </div>
+
+            <div style="margin-top:.35rem; display:flex; gap:.15rem; color:#f5b301;">
+              {% if r.stars >= 1 %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
+              {% if r.stars >= 2 %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
+              {% if r.stars >= 3 %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
+              {% if r.stars >= 4 %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
+              {% if r.stars >= 5 %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
+              <span style="margin-left:.5rem; color: var(--dark); font-weight:700;">{{ r.stars }}/5</span>
+            </div>
+
+            {% if r.comment %}
+              <p style="margin:.75rem 0 0 0; color: var(--gray); line-height:1.6;">
+                {{ r.comment }}
+              </p>
+            {% else %}
+              <p style="margin:.75rem 0 0 0; color: var(--gray);">
+                No comment provided.
+              </p>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div style="background:white; padding:1.5rem; border-radius:16px; box-shadow: var(--shadow); text-align:center; margin-bottom:2rem;">
+        <p style="margin:0; color: var(--gray);">No reviews yet.</p>
+      </div>
+    {% endif %}
+
+    <h2 style="margin:0 0 1rem 0;"><i class="fas fa-briefcase"></i> Posted Jobs</h2>
+
+    {% if gigs %}
+      <div class="jobs-grid">
+        {% for gig in gigs %}
+          <div class="job-card">
+            <h3 class="job-title">{{ gig.title }}</h3>
+            <p class="job-description">{{ gig.description }}</p>
+
+            <div class="job-details">
+              <div class="detail"><i class="fas fa-map-marker-alt"></i><span>{{ gig.location }}</span></div>
+              <div class="detail"><i class="fas fa-calendar-alt"></i><span>{{ gig.created_at|date:"d M Y" }}</span></div>
+              <div class="detail"><i class="fas fa-users"></i><span>{{ gig.applicants_count }} applicant{{ gig.applicants_count|pluralize }}</span></div>
+            </div>
+
+            <div class="pay">{{ gig.pay }}</div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div style="background:white; padding:1.5rem; border-radius:16px; box-shadow: var(--shadow); text-align:center;">
+        <p style="margin:0; color: var(--gray);">No jobs posted yet.</p>
+      </div>
+    {% endif %}
+  </div>
+</main>
+
+<footer>
+  <div class="copyright">
+    <p>© 2026 SkillMatch AI. Connecting workers with opportunities.</p>
+  </div>
+</footer>
+
+<script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>

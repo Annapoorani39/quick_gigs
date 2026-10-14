@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+{% block title %}Workforce Analytics | SkillMatch AI{% endblock %}
+{% block content %}
+<div class="analytics-page">
+    <section class="analytics-hero">
+        <div>
+            <p class="analytics-eyebrow"><i class="fas fa-chart-line"></i> SkillMatch AI · SDG 1</p>
+            <h1>Workforce analytics</h1>
+            <p>Explore worker registrations, jobs, applications, and skill activity recorded on the platform.</p>
+        </div>
+        <form class="analytics-period" method="get">
+            <label for="analytics-period">Trend period</label>
+            <select id="analytics-period" name="period">
+                {% for option in period_options %}
+                <option value="{{ option }}" {% if option == period %}selected{% endif %}>Last {{ option }} months</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-primary">Update charts</button>
+        </form>
+    </section>
+
+    <section class="analytics-stat-grid" aria-label="Workforce summary">
+        <article class="analytics-stat">
+            <span class="analytics-stat-icon navy"><i class="fas fa-users" aria-hidden="true"></i></span>
+            <p>Total registered workers</p>
+            <strong>{{ metrics.registered_job_seekers }}</strong>
+            <small>Distinct worker and combined-account profiles</small>
+        </article>
+        <article class="analytics-stat">
+            <span class="analytics-stat-icon teal"><i class="fas fa-magnifying-glass" aria-hidden="true"></i></span>
+            <p>Workers seeking jobs</p>
+            <strong>Not recorded</strong>
+            <small>The current profile does not store job-seeking status</small>
+        </article>
+        <article class="analytics-stat">
+            <span class="analytics-stat-icon blue"><i class="fas fa-briefcase" aria-hidden="true"></i></span>
+            <p>Currently employed workers</p>
+            <strong>Not recorded</strong>
+            <small>The current profile does not store employment status</small>
+        </article>
+        <article class="analytics-stat">
+            <span class="analytics-stat-icon green"><i class="fas fa-handshake" aria-hidden="true"></i></span>
+            <p>Verified hires through SkillMatch AI</p>
+            <strong>Not tracked</strong>
+            <small>Accepted or completed applications are not treated as verified hires</small>
+        </article>
+        <article class="analytics-stat">
+            <span class="analytics-stat-icon teal"><i class="fas fa-rectangle-list" aria-hidden="true"></i></span>
+            <p>Active job listings</p>
+            <strong>{{ metrics.active_job_listings }}</strong>
+            <small>Jobs whose current status is open or urgent</small>
+            <a href="{% url 'jobs' %}">Explore available jobs <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+        </article>
+        <article class="analytics-stat">
+            <span class="analytics-stat-icon gold"><i class="fas fa-paper-plane" aria-hidden="true"></i></span>
+            <p>Total applications</p>
+            <strong>{{ metrics.job_applications }}</strong>
+            <small>Application records saved in the database</small>
+            {% if user.is_authenticated %}<a href="{% url 'inbox' %}">Open your inbox <i class="fas fa-arrow-right" aria-hidden="true"></i></a>{% endif %}
+        </article>
+        <article class="analytics-stat">
+            <span class="analytics-stat-icon gold"><i class="fas fa-hourglass-half" aria-hidden="true"></i></span>
+            <p>Pending applications</p>
+            <strong>{{ metrics.pending_applications }}</strong>
+            <small>Applications with the existing pending status</small>
+            {% if user.is_authenticated %}<a href="{% url 'inbox' %}">Open your inbox <i class="fas fa-arrow-right" aria-hidden="true"></i></a>{% endif %}
+        </article>
+        <article class="analytics-stat">
+            <span class="analytics-stat-icon green"><i class="fas fa-graduation-cap" aria-hidden="true"></i></span>
+            <p>Completed learning activities</p>
+            <strong>{{ metrics.learning_resources_completed }}</strong>
+            <small>
+                {% if metrics.learning_completion_rate != None %}
+                    {{ metrics.learning_completion_rate }}% of tracked skill progress records marked complete
+                {% else %}
+                    Completion rate unavailable until progress is recorded
+                {% endif %}
+            </small>
+            <a href="{% url 'skill_dashboard' %}">Explore skill learning <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+        </article>
+    </section>
+
+    <section class="analytics-panel">
+        <div class="analytics-section-heading">
+            <div>
+                <p class="analytics-eyebrow">Platform activity</p>
+                <h2>Monthly trends</h2>
+            </div>
+            <p>Counts are based on record creation or submission dates. Completed applications are not verified employment outcomes.</p>
+        </div>
+        <div class="analytics-series-grid">
+            {% for series in trend_series %}
+            <article class="analytics-chart-card">
+                <h3>{{ series.label }}</h3>
+                {% if series.maximum %}
+                <div class="analytics-column-chart" role="img" aria-label="{{ series.label }} over the last {{ period }} months">
+                    {% for point in series.points %}
+                    <div class="analytics-column-item" title="{{ point.label }}: {{ point.value }}">
+                        <span class="analytics-column-value">{{ point.value }}</span>
+                        <div class="analytics-column-track">
+                            <span class="analytics-column-bar {{ series.color }}" style="height: {{ point.height }}%;"></span>
+                        </div>
+                        <span class="analytics-column-label">{{ point.label }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="analytics-empty">No records in this period yet.</p>
+                {% endif %}
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="analytics-two-column">
+        <article class="analytics-panel">
+            <div class="analytics-section-heading">
+                <div>
+                    <p class="analytics-eyebrow">Current records</p>
+                    <h2>Application statuses</h2>
+                </div>
+            </div>
+            <p class="analytics-description">The project’s existing application states are shown as stored. Accepted and completed applications are not independently verified hires.</p>
+            <div class="analytics-bar-list">
+                {% for item in application_funnel %}
+                <div class="analytics-bar-row">
+                    <div class="analytics-bar-label"><span>{{ item.label }}</span><strong>{{ item.count }}</strong></div>
+                    <div class="analytics-bar-track" role="img" aria-label="{{ item.label }}: {{ item.count }}">
+                        <span class="analytics-bar-fill status-{{ item.key }}" style="width: {{ item.width }}%;"></span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="analytics-panel">
+            <div class="analytics-section-heading">
+                <div>
+                    <p class="analytics-eyebrow">Open and urgent jobs</p>
+                    <h2>Job type distribution</h2>
+                </div>
+            </div>
+            <p class="analytics-description">Job type is the closest category stored by this project. No separate job-category field exists.</p>
+            {% if job_types %}
+            <div class="analytics-bar-list">
+                {% for item in job_types %}
+                <div class="analytics-bar-row">
+                    <div class="analytics-bar-label"><span>{{ item.label }}</span><strong>{{ item.count }}</strong></div>
+                    <div class="analytics-bar-track" role="img" aria-label="{{ item.label }}: {{ item.count }} open jobs">
+                        <span class="analytics-bar-fill status-open" style="width: {{ item.width }}%;"></span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="analytics-empty">No open jobs are recorded.</p>
+            {% endif %}
+            <div class="analytics-gap-section">
+                <h3 class="analytics-subheading">Applications by job type</h3>
+                <p class="analytics-description">Applications are grouped by the job’s currently stored type.</p>
+                {% if application_job_types %}
+                <div class="analytics-bar-list">
+                    {% for item in application_job_types %}
+                    <div class="analytics-bar-row">
+                        <div class="analytics-bar-label"><span>{{ item.label }}</span><strong>{{ item.count }}</strong></div>
+                        <div class="analytics-bar-track" role="img" aria-label="{{ item.label }}: {{ item.count }} applications">
+                            <span class="analytics-bar-fill status-accepted" style="width: {{ item.width }}%;"></span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="analytics-empty">No applications are recorded.</p>
+                {% endif %}
+            </div>
+        </article>
+    </section>
+
+    <section class="analytics-panel">
+        <div class="analytics-section-heading">
+            <div>
+                <p class="analytics-eyebrow">Current profile and open-job skill records</p>
+                <h2>Skills and demand gaps</h2>
+            </div>
+            <p>Counts represent distinct profiles or open jobs listing each normalized skill, not people’s proficiency.</p>
+        </div>
+        <div class="analytics-two-column">
+            <div>
+                <h3 class="analytics-subheading">Most common worker skills</h3>
+                {% if popular_worker_skills %}
+                <div class="analytics-bar-list">
+                    {% for item in popular_worker_skills %}
+                    <div class="analytics-bar-row">
+                        <div class="analytics-bar-label"><span>{{ item.label }}</span><strong>{{ item.count }}</strong></div>
+                        <div class="analytics-bar-track" role="img" aria-label="{{ item.label }} listed by {{ item.count }} worker profiles">
+                            <span class="analytics-bar-fill status-navy" style="width: {{ item.width }}%;"></span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="analytics-empty">Worker skill data is not available yet.</p>
+                {% endif %}
+            </div>
+            <div>
+                <h3 class="analytics-subheading">Most requested skills in open jobs</h3>
+                {% if popular_requested_skills %}
+                <div class="analytics-bar-list">
+                    {% for item in popular_requested_skills %}
+                    <div class="analytics-bar-row">
+                        <div class="analytics-bar-label"><span>{{ item.label }}</span><strong>{{ item.count }}</strong></div>
+                        <div class="analytics-bar-track" role="img" aria-label="{{ item.label }} requested by {{ item.count }} open jobs">
+                            <span class="analytics-bar-fill status-open" style="width: {{ item.width }}%;"></span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="analytics-empty">No open jobs have listed skills yet.</p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="analytics-gap-section">
+            <h3 class="analytics-subheading">Largest recorded demand gaps</h3>
+            <p class="analytics-description">A gap means more open jobs list a skill than worker profiles currently list it. This is not a measure of qualification or employability.</p>
+            {% if skill_gaps %}
+            <div class="analytics-gap-grid">
+                {% for item in skill_gaps %}
+                <div class="analytics-gap-card">
+                    <strong>{{ item.label }}</strong>
+                    <span>{{ item.demand }} open jobs · {{ item.supply }} worker profiles</span>
+                    <small>Difference: {{ item.gap }}</small>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="analytics-empty">No demand gaps can be calculated from the currently recorded skills.</p>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="analytics-note" aria-label="Data interpretation">
+        <span class="analytics-stat-icon navy"><i class="fas fa-circle-info" aria-hidden="true"></i></span>
+        <div>
+            <h2>How to interpret these figures</h2>
+            <p>{{ metrics.note }}</p>
+            <p>SkillMatch AI helps connect skills with opportunities and learning resources. These activity metrics alone do not establish that poverty has been reduced or that income has increased.</p>
+        </div>
+    </section>
+</div>
+{% endblock %}

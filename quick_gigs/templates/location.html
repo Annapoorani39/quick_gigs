@@ -1,0 +1,111 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nearby Locations | SkillMatch AI</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <style>
+    .location-panel { max-width: 900px; margin: 0 auto; padding: clamp(1rem, 3vw, 2rem); border: 1px solid #e4ebf2; border-radius: 18px; background: #fff; box-shadow: 0 8px 24px rgba(18, 54, 90, .055); }
+    .location-panel h1 { margin-top: 0; color: #12365a; }
+    .location-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 1rem; }
+    .location-panel .job-card { max-width: none; padding: 1rem; }
+    .location-panel .distance { color: #0f766e; font-weight: 700; }
+    .location-panel .loading { color: #526579; }
+    .location-panel .error { color: #8a3030; }
+  </style>
+  <link rel="stylesheet" href="{% static 'css/modern-ui.css' %}">
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC38vaN-ji1y_IlVpS3CSFD2hhBvsYCWWY&amp;libraries=places"></script>
+</head>
+<body>
+  <header>
+    <a href="{% url 'home' %}" class="logo">
+      <div class="logo-icon"><i class="fas fa-briefcase" aria-hidden="true"></i></div>
+      <div>SkillMatch AI</div>
+    </a>
+    <nav class="page-nav" aria-label="Main navigation">
+      <a href="{% url 'home' %}" class="nav-btn"><i class="fas fa-home" aria-hidden="true"></i> Home</a>
+      <a href="{% url 'jobs' %}" class="nav-btn"><i class="fas fa-briefcase" aria-hidden="true"></i> Jobs</a>
+      <a href="{% url 'job_matches' %}" class="nav-btn"><i class="fas fa-chart-line" aria-hidden="true"></i> Job Matches</a>
+    </nav>
+  </header>
+  <main class="main-content">
+    <section class="location-panel">
+      <p class="eyebrow">Location discovery</p>
+      <h1>Nearby locations</h1>
+      <p class="muted">Allow location access to calculate distances to the locations currently supported.</p>
+      <div id="distances" class="location-cards loading" role="status" aria-live="polite">Getting your location...</div>
+    </section>
+  </main>
+
+  <script>
+    function getCSRFToken() {
+      const name = 'csrftoken';
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+
+    // Get user's location and send to server
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const userLat = pos.coords.latitude;
+        const userLng = pos.coords.longitude;
+        
+        // Send location to server for distance calculation
+        fetch("{% url 'location' %}", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': getCSRFToken()
+          },
+          body: JSON.stringify({
+            latitude: userLat,
+            longitude: userLng
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          const distancesDiv = document.getElementById('distances');
+          
+          if (data.success) {
+            distancesDiv.innerHTML = '';
+            data.distances.forEach(result => {
+              const div = document.createElement('div');
+              div.className = 'job-card';
+              div.innerHTML = `
+                <h3>${result.name}</h3>
+                <p class="distance">${result.distance} km away</p>
+              `;
+              distancesDiv.appendChild(div);
+            });
+          } else {
+            distancesDiv.className = 'error';
+            distancesDiv.textContent = 'Error calculating distances: ' + (data.error || 'Unknown error');
+          }
+        })
+        .catch(error => {
+          document.getElementById('distances').className = 'error';
+          document.getElementById('distances').textContent = 'Error: ' + error.message;
+        });
+      },
+      () => {
+        document.getElementById('distances').className = 'error';
+        document.getElementById('distances').textContent = 'Location access denied. Please enable location permissions.';
+      }
+    );
+  </script>
+</body>
+</html>

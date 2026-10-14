@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}SDG 1 — Opportunities for Everyone | SkillMatch AI{% endblock %}
+{% block content %}
+<section class="matches-shell" style="max-width: 1200px; margin: 0 auto;">
+    <section class="matches-intro">
+        <p class="eyebrow">SkillMatch AI · SDG 1 — No Poverty</p>
+        <h1>SDG 1 — Opportunities for Everyone</h1>
+        <p>SkillMatch AI supports SDG 1 by helping people discover suitable jobs, identify missing skills, access free learning resources, and improve their employment and earning opportunities.</p>
+        <p class="muted">This page uses the platform’s existing job database and learning-progress tools to surface practical opportunities without making education or financial disclosure mandatory.</p>
+    </section>
+
+    <section class="match-summary" aria-label="SDG 1 summary">
+        <article><span>Open opportunities</span><strong>{{ jobs|length }}</strong></article>
+        <article><span>Entry-level roles</span><strong>{{ jobs|dictsort:"entry_level"|length }}</strong></article>
+        <article><span>Jobs with salary info</span><strong>{{ jobs|length }}</strong></article>
+        <article><span>Free learning links</span><strong>{{ jobs|length }}</strong></article>
+    </section>
+
+    <section class="matches-intro" style="margin-top: 2rem;">
+        <h2>Filter opportunities</h2>
+        <form method="get" class="match-filters" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; align-items:end;">
+            <label>Minimum salary
+                <input class="form-control" type="number" min="0" step="100" name="min_salary" value="{{ selected_min_salary|default:'' }}" placeholder="e.g. 3000">
+            </label>
+            <label>Location
+                <select class="form-control" name="location">
+                    <option value="">Any location</option>
+                    {% for location in location_options %}
+                    <option value="{{ location }}" {% if location == selected_location %}selected{% endif %}>{{ location }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>Employment type
+                <select class="form-control" name="employment_type">
+                    <option value="">Any type</option>
+                    <option value="full-time" {% if selected_employment_type == 'full-time' %}selected{% endif %}>Full-time</option>
+                    <option value="part-time" {% if selected_employment_type == 'part-time' %}selected{% endif %}>Part-time</option>
+                    <option value="contract" {% if selected_employment_type == 'contract' %}selected{% endif %}>Contract</option>
+                    <option value="temporary" {% if selected_employment_type == 'temporary' %}selected{% endif %}>Temporary</option>
+                </select>
+            </label>
+            <label>Required skills
+                <input class="form-control" type="text" name="required_skills" value="{{ selected_required_skills|default:'' }}" placeholder="housekeeping, sales">
+            </label>
+            <label class="form-check" style="display:flex; align-items:center; gap: 0.6rem; padding-top: 1.6rem;">
+                <input type="checkbox" name="entry_only" {% if entry_only %}checked{% endif %}>
+                <span>Entry-level only</span>
+            </label>
+            <button class="btn btn-primary" type="submit">Apply filters</button>
+        </form>
+    </section>
+
+    <section aria-labelledby="opportunity-list-heading" style="margin-top: 2rem;">
+        <div class="matches-heading-row">
+            <h2 id="opportunity-list-heading">Available jobs</h2>
+            <a class="btn btn-secondary" href="{% url 'sdg1_impact' %}">View SDG 1 impact</a>
+        </div>
+
+        {% if jobs %}
+            <div class="match-job-list">
+                {% for item in jobs %}
+                {% with gig=item.gig %}
+                <article class="match-job-card" data-match-card>
+                    <div class="match-job-heading">
+                        <div>
+                            <h3><a href="{% url 'job_detail' gig.id %}">{{ gig.title }}</a></h3>
+                            <p>{{ gig.description }}</p>
+                            <p class="muted">
+                                {{ gig.location }} · {{ gig.employer_name }} · {{ item.employment_type }}
+                                {% if item.entry_level %} · Entry-level friendly{% endif %}
+                            </p>
+                        </div>
+                        <div class="match-score-block" aria-live="polite">
+                            <strong>{% if item.salary_amount %}{{ item.salary_amount }}{% else %}—{% endif %}</strong>
+                            <span>{{ item.salary_label }}</span>
+                        </div>
+                    </div>
+
+                    <div class="match-columns">
+                        <div>
+                            <h4>Required skills</h4>
+                            <ul>
+                                {% for skill in item.required_skills %}
+                                <li>{{ skill }}</li>
+                                {% empty %}
+                                <li>No listed skill requirements.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div>
+                            <h4>Eligibility</h4>
+                            <ul>
+                                <li>Employment type: {{ item.employment_type }}</li>
+                                <li>Entry-level: {% if item.entry_level %}Yes{% else %}Not clearly marked{% endif %}</li>
+                                <li>Salary: {% if item.salary_label %}{{ item.salary_label }}{% else %}Salary not provided{% endif %}</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="match-columns" style="margin-top: 1rem;">
+                        <div>
+                            <h4>Free learning support</h4>
+                            {% if item.learning_resources %}
+                                <ul class="sdg1-resource-list">
+                                    {% for resource in item.learning_resources %}
+                                    <li>
+                                        <strong>{{ resource.skill }}</strong>
+                                        <p>{{ resource.why_useful }}</p>
+                                        <div class="sdg1-resource-links">
+                                            {% for link in resource.links %}
+                                            <a href="{{ link }}" target="_blank" rel="noopener noreferrer">Learning resource</a>
+                                            {% endfor %}
+                                        </div>
+                                        {% if user.is_authenticated %}
+                                            <label class="progress-control" style="display:flex; align-items:center; gap:0.5rem; margin-top:0.5rem;">
+                                                <input type="checkbox" class="sdg1-progress-toggle" data-skill="{{ resource.skill }}" {% if resource.completed %}checked{% endif %}> Mark as completed
+                                            </label>
+                                        {% else %}
+                                            <p class="muted">Sign in to track progress for this resource.</p>
+                                        {% endif %}
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p class="muted">No specific free learning resources were matched for this role yet.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </article>
+                {% endwith %}
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-search" style="font-size: 3rem; color: #bbb; margin-bottom: 1rem;"></i>
+                <p>No jobs match the selected filters yet. Try broadening the minimum salary or location.</p>
+            </div>
+        {% endif %}
+    </section>
+</section>
+
+<script>
+(function getCookie(name) {
+    const match = document.cookie.match('(?:^|; )' + name + '=([^;]*)');
+    return match ? decodeURIComponent(match[1]) : '';
+})
+
+function saveLearningProgress(skillName, completed) {
+    const payload = { skill: skillName, completed: completed };
+    return fetch('/api/learning/progress/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify(payload)
+    });
+}
+
+const toggles = document.querySelectorAll('.sdg1-progress-toggle');
+for (const toggle of toggles) {
+    toggle.addEventListener('change', async function () {
+        const skillName = this.dataset.skill;
+        try {
+            const response = await saveLearningProgress(skillName, this.checked);
+            if (!response.ok) {
+                this.checked = !this.checked;
+                alert('Progress could not be saved. Please try again later.');
+            }
+        } catch (error) {
+            this.checked = !this.checked;
+            alert('Progress could not be saved. Please try again later.');
+        }
+    });
+}
+</script>
+{% endblock %}
